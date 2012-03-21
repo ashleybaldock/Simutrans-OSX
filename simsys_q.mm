@@ -182,7 +182,8 @@ unsigned int get_system_color(unsigned int r, unsigned int g, unsigned int b)
 
 // Convert from Cocoa event modifier keys to Simutrans event ones
 unsigned int convert_modifier_keys(NSEvent* evt)
-{    
+{
+    // Currently only ctrl and shift are implemented for Simutrans
 	return
     (evt.modifierFlags & NSAlphaShiftKeyMask ? 0 : 0) |     // Capslock
     (evt.modifierFlags & NSShiftKeyMask      ? 1 : 0) |     // Shift
@@ -322,6 +323,9 @@ static void internal_GetEvents(bool wait)
         
         case NSFlagsChanged:
         {
+            // Indicates that modifier keys have changed, but Simutrans doesn't make use of this info
+            sys_event.type = SIM_IGNORE_EVENT;
+			sys_event.code = 0;
             break;
         }
             
@@ -331,10 +335,12 @@ static void internal_GetEvents(bool wait)
             unsigned long code;
 
             NSString *codechars = [evt charactersIgnoringModifiers];
+            NSString *codecharsCS = [evt characters];
             
             unichar keyChar = 0;
             
             if ( [codechars length] == 0 ) {
+                // Ignore dead keys
                 code = 0;
             }
             else if ( [codechars length] == 1 ) {
@@ -370,6 +376,7 @@ static void internal_GetEvents(bool wait)
                     case NSF15FunctionKey:          code = SIM_KEY_F15;         break;
                     default:
                         // TODO - need to cope with multi-character unicode inputs!
+                        keyChar = [codecharsCS characterAtIndex:0];     // Use case-sensitive version (for Capslock)
                         code = keyChar;
                         break;
                 }
@@ -478,21 +485,21 @@ void GetEventsNoWait(void)
 /* Mouse-pointer */
 
 /*
- * Not implemented for Mac
+ * Not implemented for Mac as this breaks human interface guidelines
  */
 void show_pointer(int)
 {
 }
 
 /*
- * Not implemented for Mac
+ * Not implemented for Mac as this breaks human interface guidelines
  */
 void move_pointer(int, int)
 {
 }
 
 /*
- * Not implemented for Mac
+ * Not implemented for Mac as this breaks human interface guidelines
  */
 void set_pointer(int)
 {
