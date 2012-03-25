@@ -37,6 +37,7 @@ typedef unsigned short PIXVAL;
 #endif
 
 
+
 // Globals we need
 // Width and height of the actual screen buffer
 int width = 0;
@@ -349,6 +350,7 @@ static void internal_GetEvents(bool wait)
                 switch (keyChar) {
                     case NSDeleteCharacter:         code = SIM_KEY_BACKSPACE;   break;
                     case NSTabCharacter:            code = SIM_KEY_TAB;         break;
+					case NSBackTabCharacter:		code = SIM_KEY_TAB;			break;
                     case NSEnterCharacter:          code = SIM_KEY_ENTER;       break;
                     case NSLeftArrowFunctionKey:    code = SIM_KEY_LEFT;        break;
                     case NSRightArrowFunctionKey:   code = SIM_KEY_RIGHT;       break;
