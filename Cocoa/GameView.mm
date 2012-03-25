@@ -6,8 +6,6 @@
  * This file is part of the Simutrans project under the artistic licence.
  */
 
-#include <pthread.h>
-
 #import "GameView.h"
 #import "STQueue.h"
 #import "AppDelegate.h"
@@ -109,14 +107,6 @@ STQueue* eventqueue = [[STQueue alloc] init];
 - (void)keyUp:(NSEvent *)theEvent
 {
     [eventqueue enqueue:[theEvent copy]];
-
-/*
- case SDL_ACTIVEEVENT: - application loses/gains focus
- case SDL_KEYUP:
- sys_event.type = SIM_KEYBOARD;
- sys_event.code = 0;
- break;
- */
 }
 
 // Modifier key flags have changed (e.g. ctrl pressed)
@@ -128,7 +118,7 @@ STQueue* eventqueue = [[STQueue alloc] init];
 
 - (void)scrollWheel:(NSEvent *)theEvent
 {
-    //[eventqueue enqueue:theEvent];
+    [eventqueue enqueue:[theEvent copy]];
 }
 
 - (void)viewDidMoveToWindow
@@ -164,17 +154,8 @@ STQueue* eventqueue = [[STQueue alloc] init];
 }
 
 /*
- case SDL_QUIT:
- sys_event.type = SIM_SYSTEM;
- sys_event.code = SIM_SYSTEM_QUIT;
- break;
- 
- default:
- sys_event.type = SIM_IGNORE_EVENT;
- sys_event.code = 0;
- break;
+ * Handle synchronisation between the game thread quitting and the app quitting
  */
-
 - (void)game_trigger_quit
 {
     NSLog(@"Game quit event triggered!!!");
