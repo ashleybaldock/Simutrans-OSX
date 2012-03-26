@@ -33,11 +33,17 @@ void dr_mkdir(char const* const path)
 }
 
 
+/*
+ * Provides the user's home directory
+ * Creates Simutrans-specific sub-directories if they don't already exist
+ */
 char const* dr_query_homedir()
 {
 	static char buffer[PATH_MAX];
 	
-	sprintf(buffer, "%s/Library/Containers/org.simutrans.simutrans/Data/Library/Application Support", getenv("HOME"));
+	sprintf(buffer, "%s/Library/Application Support", [NSHomeDirectory() UTF8String]);
+	
+	NSLog(@"%s", buffer);
 	
 	// create other subdirectories
 	strcat(buffer, "/");
@@ -53,12 +59,37 @@ char const* dr_query_homedir()
 	return buffer;
 }
 
+/*
+ * Provides the logging location for the application
+ */
+char const* dr_query_logdir()
+{
+	static char buffer[PATH_MAX];
+	
+	sprintf(buffer, "%s/Library/Logs", [NSHomeDirectory() UTF8String]);
+	
+	return buffer;
+}
+
+/*
+ * Query for user pakset directory
+ * This is a location users can place their own paksets
+ * and use the in-game pakset selection dialog to choose one
+ */
+char const* dr_query_objdir()
+{
+	static char buffer[PATH_MAX];
+	
+	// TODO - this should be a user-accesible location (needs sandbox privs to read)
+	sprintf(buffer, "%s/Library/Application Support/paksets/", [NSHomeDirectory() UTF8String]);
+	
+	return buffer;
+}
+
 
 /*
  * This retrieves the 2 byte string for the default language
  */
-
-
 const char *dr_get_locale_string()
 {
 	static char code[4];
@@ -66,7 +97,7 @@ const char *dr_get_locale_string()
 	setlocale( LC_ALL, "" );
 	ptr = setlocale( LC_ALL, NULL );
 	code[0] = 0;
-	for(  int i=0;  i<lengthof(code)-1  &&  isalpha(ptr[i]);  i++  ) {
+	for(  unsigned long i = 0;  i < lengthof(code) - 1  &&  isalpha(ptr[i]);  i++  ) {
 		code[i] = tolower(ptr[i]);
 		code[i+1] = 0;
 	}
@@ -85,25 +116,21 @@ void dr_fatal_notify(char const* const msg)
 
 int sysmain(int const argc, char** const argv)
 {
-#if !defined __BEOS__
-#	if defined __GLIBC__ && !defined __AMIGA__
+#if defined __GLIBC__
 	/* glibc has a non-standard extension */
 	char* buffer2 = 0;
-#	else
+#else
 	char buffer2[PATH_MAX];
-#	endif
-#	ifndef __AMIGA__
+#endif
 	char buffer[PATH_MAX];
 	ssize_t const length = readlink("/proc/self/exe", buffer, lengthof(buffer) - 1);
 	if (length != -1) {
 		buffer[length] = '\0'; /* readlink() does not NUL-terminate */
 		argv[0] = buffer;
 	}
-#	endif
 	// no process file system => need to parse argv[0]
 	/* should work on most unix or gnu systems */
 	argv[0] = realpath(argv[0], buffer2);
-#endif
 	
 	return simu_main(argc, argv);
 }
