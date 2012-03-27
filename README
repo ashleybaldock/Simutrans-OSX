@@ -1,0 +1,3 @@
+These files on their own aren't too useful, you need to combine them with an appropriate copy of the Simutrans source code.
+
+(Note: Some revisions also need patches against the Simutrans source code, due to files managed under Subversion being changed).
