@@ -3,3 +3,5 @@ These files on their own aren't too useful, you need to combine them with an app
 (Note: Some revisions also need patches against the Simutrans source code, due to files managed under Subversion being changed.)
 
 (Note 2: The BSD licence associated with this project applies only to the files managed here, as part of the Simutrans OSX port. Simutrans itself is released under an Artistic licence, the full text of which is distributed along with the Simutrans project. I make no claims to the Simutrans name and use it with permission of the Simutrans community.)
+
+(Note 3: The icon used with this project was created by An_dz, from the International Simutrans Forum. Copyright to this artwork remains with the author, and is used with permission.)
