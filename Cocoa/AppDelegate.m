@@ -1,9 +1,7 @@
 /*
- * Copyright (c) 2011 Simutrans Project
+ * Copyright (c) 2011-2012 Timothy Baldock <tb@entropy.me.uk>
  *
- * Created by Timothy Baldock on 13/12/2011.
- *
- * This file is part of the Simutrans project under the artistic licence.
+ * Created 13/12/2011
  */
 
 #import "AppDelegate.h"

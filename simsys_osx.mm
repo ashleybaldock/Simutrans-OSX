@@ -1,9 +1,7 @@
 /*
- * Copyright (c) 2011-2012 Simutrans Project
+ * Copyright (c) 2011-2012 Timothy Baldock <tb@entropy.me.uk>
  *
- * Created by Timothy Baldock on 25/03/2012.
- *
- * This file is part of the Simutrans project under the artistic licence.
+ * Created 25/03/2012
  */
 
 /*

@@ -1,9 +1,7 @@
 /*
- * Copyright (c) 2011 Simutrans Project
+ * Copyright (c) 2011-2012 Timothy Baldock <tb@entropy.me.uk>
  *
- * Created by Timothy Baldock on 21/12/2011.
- *
- * This file is part of the Simutrans project under the artistic licence.
+ * Created 21/12/2011
  */
 
 #import "STQueue.h"
