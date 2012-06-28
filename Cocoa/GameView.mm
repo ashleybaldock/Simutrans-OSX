@@ -191,7 +191,6 @@ STQueue* eventqueue = [[STQueue alloc] init];
         screenbuf_resizing = 0;
     }
     
-    
     return self;
 }
 
@@ -205,7 +204,10 @@ STQueue* eventqueue = [[STQueue alloc] init];
     screenbuf_lock = [[NSConditionLock alloc] initWithCondition:0];
     screenbuf_resizing = 0;
     game_quit = 0;
-        
+	
+	NSWindow* w = [[NSWindow alloc] init];
+	[NSBundle loadNibNamed:@"Launcher" owner:w];
+
     // Spawn main game thread
     [NSThread detachNewThreadSelector:@selector(GameThreadMainRoutine) toTarget:self withObject:nil];
 }
