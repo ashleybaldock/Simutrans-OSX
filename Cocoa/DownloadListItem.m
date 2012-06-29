@@ -25,7 +25,8 @@
 }
 
 - (IBAction)doButtons:(id)sender {
-	
+	NSWindow* w = [[NSWindow alloc] init];
+	[NSBundle loadNibNamed:@"GameView" owner:w];
 }
 
 

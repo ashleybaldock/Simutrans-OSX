@@ -10,6 +10,19 @@
 
 @implementation Pakset
 
+
+/*
+ Store listing of localy downloaded paksets, along with those available online
+ Online listing populated at launch, when connection available
+ 
+ name
+ description			
+ downloadedversion		
+ availableversion		
+ url					
+ localpath				
+ */
+
 - (id) init
 {
     if (self = [super init])

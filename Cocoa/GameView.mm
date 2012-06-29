@@ -25,8 +25,8 @@ extern int width;
 extern int height;
 extern PIXVAL* screenbuf;
 
-extern int g_argc;
-extern char** g_argv;
+//extern int g_argc;
+//extern char** g_argv;
 extern int sysmain(int, char**);
 
 GameView* theGameView;
@@ -161,14 +161,21 @@ STQueue* eventqueue = [[STQueue alloc] init];
     // When game quits, it will send back a message indicating this (via dr_os_quit())
     if (game_quit == 0) {
         game_quit = 1;
-        [NSApp terminate:nil];
+		// Don't terminate, just close parent window
+        //[NSApp terminate:nil];
+		[[self window] close];
     } else {
         game_quit = 1;
         NSLog(@"Game thread has quit in response to request from application, permitting termination");
+		[[self window] close];
         [NSApp replyToApplicationShouldTerminate:YES];
     }
 }
 
+/*
+ * Asks the game thread to quit
+ * It will respond via dr_os_quit()
+ */
 - (void)trigger_quit
 {
     NSLog(@"Quit event triggered!!!");
@@ -205,8 +212,8 @@ STQueue* eventqueue = [[STQueue alloc] init];
     screenbuf_resizing = 0;
     game_quit = 0;
 	
-	NSWindow* w = [[NSWindow alloc] init];
-	[NSBundle loadNibNamed:@"Launcher" owner:w];
+//	NSWindow* w = [[NSWindow alloc] init];
+//	[NSBundle loadNibNamed:@"Launcher" owner:w];
 
     // Spawn main game thread
     [NSThread detachNewThreadSelector:@selector(GameThreadMainRoutine) toTarget:self withObject:nil];
@@ -220,13 +227,31 @@ STQueue* eventqueue = [[STQueue alloc] init];
     //NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
     
     NSLog(@"Thread spawned...");
+	
+	NSMutableArray* argvs = [[NSMutableArray alloc] init];
+	
+	[argvs addObject:[NSString stringWithString:[[[NSProcessInfo processInfo] arguments] objectAtIndex:0]]];
+		
+	// Location of pakset
+	// Generate from sandbox location + pakset base name
+	[argvs addObject:[NSString stringWithString:@"-objects"]];
+	[argvs addObject:[NSString stringWithString:@"pak/"]];
+	
+	int g_argc = [argvs count];
+	char* g_argv[32];
+	
+	for (int i = 0; i < g_argc; i++) {
+		g_argv[i] = strdup([[argvs objectAtIndex:i] UTF8String]);
+	}
+	
+	// Hope here that the game doesn't alter any of the argv pointers...
     sysmain(g_argc, g_argv);
     
+	for (int i = 0; i < g_argc; i++) {
+		free(g_argv[i]);				// This doesn't work!!
+	}
+	
     //[pool release];
-    
-    // TODO get argc/argv
-    
-    // If main game thread has exited, exit from the Cocoa application too (TODO)
 }
 
 - (void)lockScreenForRead

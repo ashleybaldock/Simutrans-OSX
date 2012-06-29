@@ -43,12 +43,6 @@ int height = 0;
 // PIXVAL is a uint16 (RGB 1555)
 PIXVAL* screenbuf = NULL;
 
-//pthread_mutex_t mutex_screenbuf;
-
-
-int g_argc = 0;
-char** g_argv = NULL;
-
 // Reference to the window which we draw to
 extern GameView* theGameView;
 // Reference to the queue of Cocoa events which Simutrans needs to take notice of
@@ -593,9 +587,6 @@ void dr_flush()
 int main (int argc, char** argv)
 {
     gettimeofday(&first, NULL);
-
-    g_argc = argc;
-    g_argv = argv;
 
     // Start up Cocoa application
     return NSApplicationMain(argc, (const char**)argv);

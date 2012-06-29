@@ -136,23 +136,10 @@ void dr_fatal_notify(char const* const msg)
 }
 
 
+/*
+ * Called to spawn game thread
+ */
 int sysmain(int const argc, char** const argv)
-{
-#if defined __GLIBC__
-	/* glibc has a non-standard extension */
-	char* buffer2 = 0;
-#else
-	char buffer2[PATH_MAX];
-#endif
-	char buffer[PATH_MAX];
-	ssize_t const length = readlink("/proc/self/exe", buffer, lengthof(buffer) - 1);
-	if (length != -1) {
-		buffer[length] = '\0'; /* readlink() does not NUL-terminate */
-		argv[0] = buffer;
-	}
-	// no process file system => need to parse argv[0]
-	/* should work on most unix or gnu systems */
-	argv[0] = realpath(argv[0], buffer2);
-	
+{	
 	return simu_main(argc, argv);
 }
