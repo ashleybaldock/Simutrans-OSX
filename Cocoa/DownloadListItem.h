@@ -17,6 +17,6 @@
 
 - (IBAction)doButtons:(id)sender;
 
-- (id)copyWithZone:(NSZone *)zone;
+//- (id)copyWithZone:(NSZone *)zone;
 
 @end

@@ -24,9 +24,9 @@
 	//[downloadList setMinItemSize:size];
 	//[downloadList setMaxItemSize:size];
 	
-	[arrayController addObject: [NSDictionary dictionaryWithObjectsAndKeys:@"pak.test", @"paksetname", @"some description", @"paksetdesc", nil]];
-	[arrayController addObject: [NSDictionary dictionaryWithObjectsAndKeys:@"pak.test2", @"paksetname", @"some description2", @"paksetdesc", nil]];
-	[arrayController addObject: [NSDictionary dictionaryWithObjectsAndKeys:@"pak.test3", @"paksetname", @"some description3", @"paksetdesc", nil]];
+	[arrayController addObject: [NSDictionary dictionaryWithObjectsAndKeys:@"pak.test", @"paksetname", @"some description", @"paksetdesc", @"pak/", @"paksetpath", nil]];
+	[arrayController addObject: [NSDictionary dictionaryWithObjectsAndKeys:@"pak.test2", @"paksetname", @"some description2", @"paksetdesc", @"pak2/", @"paksetpath", nil]];
+	[arrayController addObject: [NSDictionary dictionaryWithObjectsAndKeys:@"pak.test3", @"paksetname", @"some description3", @"paksetdesc", @"pak3/", @"paksetpath", nil]];
 	
 	// Connect to listing server to download pakset listing
 	// Send game version, which is used to return only compatible paksets

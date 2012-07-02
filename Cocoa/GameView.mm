@@ -43,6 +43,7 @@ STQueue* eventqueue = [[STQueue alloc] init];
 
 @implementation GameView
 
+
 // We want to accept keyboard events
 - (BOOL)acceptsFirstResponder
 {
@@ -215,6 +216,13 @@ STQueue* eventqueue = [[STQueue alloc] init];
 //	NSWindow* w = [[NSWindow alloc] init];
 //	[NSBundle loadNibNamed:@"Launcher" owner:w];
 
+
+	NSLog(@"%@", [[representedObject content] attributeKeys]);
+	NSLog(@"%@", [[representedObject content] exposedBindings]);
+	
+	
+	NSLog(@"awakeFromNib, paksetname is: %@", [[representedObject content] valueForKey:@"paksetname"]);
+	
     // Spawn main game thread
     [NSThread detachNewThreadSelector:@selector(GameThreadMainRoutine) toTarget:self withObject:nil];
 }

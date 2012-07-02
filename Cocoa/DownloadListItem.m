@@ -24,9 +24,11 @@
     // Drawing code here.
 }
 
-- (IBAction)doButtons:(id)sender {
-	NSWindow* w = [[NSWindow alloc] init];
-	[NSBundle loadNibNamed:@"GameView" owner:w];
+- (IBAction)doButtons:(NSSegmentedControl*)sender {
+	NSString* s = [[self representedObject] valueForKey:@"paksetname"];
+	NSLog(@"Pakname is: %@", s);
+	//NSWindow* w = [[NSWindow alloc] init];
+	[NSBundle loadNibNamed:@"GameView" owner:self];
 }
 
 

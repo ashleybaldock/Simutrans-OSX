@@ -8,6 +8,7 @@
 
 @interface GameView : NSView {
 @public
+	IBOutlet NSObjectController* representedObject;
     NSConditionLock* screenbuf_lock;    // 0 = Normal, 1 = resizing
     int game_quit;
     int screenbuf_resizing;
@@ -17,3 +18,4 @@
 - (void)game_trigger_quit;
 
 @end
+
