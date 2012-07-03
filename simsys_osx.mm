@@ -135,6 +135,11 @@ void dr_fatal_notify(char const* const msg)
 	fputs(msg, stderr);
 }
 
+bool dr_download_pakset( const char *, bool )
+{
+	// On OSX a pre-game launcher window takes care of pakset downloading
+	return false;
+}
 
 /*
  * Called to spawn game thread

@@ -1,10 +1,8 @@
-//
-//  LauncherWindowController.h
-//  simutrans
-//
-//  Created by Timothy Baldock on 29/03/2012.
-//  Copyright (c) 2012 Simutrans Project. All rights reserved.
-//
+/*
+ * Copyright (c) 2012 Timothy Baldock <tb@entropy.me.uk>
+ *
+ * Created 29/03/2012
+ */
 
 #import <Foundation/Foundation.h>
 

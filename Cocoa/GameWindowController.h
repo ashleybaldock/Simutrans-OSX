@@ -1,10 +1,8 @@
-//
-//  GameWindowController.h
-//  simutrans
-//
-//  Created by Timothy Baldock on 28/06/2012.
-//  Copyright (c) 2012 Simutrans Project. All rights reserved.
-//
+/*
+ * Copyright (c) 2012 Timothy Baldock <tb@entropy.me.uk>
+ *
+ * Created 28/06/2012
+ */
 
 #import <Cocoa/Cocoa.h>
 
