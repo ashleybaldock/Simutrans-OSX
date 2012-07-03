@@ -25,7 +25,6 @@
 - (IBAction)doButtons:(NSSegmentedControl*)sender {
 	NSString* s = [[self representedObject] valueForKey:@"paksetname"];
 	NSLog(@"Pakname is: %@", s);
-	//NSWindow* w = [[NSWindow alloc] init];
 	[NSBundle loadNibNamed:@"GameView" owner:self];
 }
 

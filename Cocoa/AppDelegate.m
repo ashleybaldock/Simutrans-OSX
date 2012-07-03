@@ -16,10 +16,14 @@
     // Insert code here to initialize your application
 }
 
-- (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender
+/*- (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender
 {
     // We should not terminate until the game thread does
     
+	// TODO Go through all Pakset objects' GameView references (if not NIL) and signal that game 
+	// instance to quit, once the last one has done so NSTerminateNow will be sent back
+	return NSTerminateNow;
+	
     GameView* gv = [_window contentView];
     
     // If game thread has already exited, then we can quit
@@ -34,7 +38,7 @@
         
         return NSTerminateLater;
     }
-}
+}*/
 
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)theApplication
 {

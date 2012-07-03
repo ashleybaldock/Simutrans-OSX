@@ -32,4 +32,10 @@
 	
 }
 
+// We want to accept keyboard events
+- (BOOL)acceptsFirstResponder
+{
+    return YES;
+}
+
 @end
