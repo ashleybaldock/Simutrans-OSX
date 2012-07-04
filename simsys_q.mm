@@ -424,20 +424,50 @@ static void internal_GetEvents(bool wait)
                     sys_event.code = SIM_SYSTEM_QUIT;
                     break;
                 }
+				case 10:
+				{
+					NSLog(@"Custom touch event");
+					sys_event.type = SIM_TOUCH;
+					sys_event.code = SIM_TOUCH_SCROLL;
+					sys_event.mx = evt.data1;
+					sys_event.my = evt.data2;
+					break;
+				}
 
             }
             break;
         }
         // NSScrollWheelMask??
-        //case NSScrollWheel:
-        //{
+        case NSScrollWheel:
+        {
             // Need to detect if event comes from a multi-touch trackpad or from a mouse
             // If from a mouse, then zoom in/zoom out
             // If from trackpad, two-finger scrolling should move around (like a right-mouse-drag)
                 // Should be interpreted by the game as scroll wheel events? How about scrolling within dialogs?
-            
-        //}
-        
+            if ([evt deltaY] > 0.0) {
+				NSLog(@"Scrollwheel (down) event made it to internal_GetEvents");
+				sys_event.type    = SIM_MOUSE_BUTTONS;
+				sys_event.key_mod = convert_modifier_keys(evt);
+				NSPoint event_location = [evt locationInWindow];
+				NSPoint local_point = [theGameView convertPoint:event_location fromView:nil];
+				sys_event.mx      = local_point.x;
+				sys_event.my      = height - local_point.y;
+				sys_event.mb      = 0;
+				sys_event.code    = SIM_MOUSE_WHEELDOWN;
+			} else if ([evt deltaY] < 0.0) {
+				NSLog(@"Scrollwheel (up) event made it to internal_GetEvents");
+				sys_event.type    = SIM_MOUSE_BUTTONS;
+				sys_event.key_mod = convert_modifier_keys(evt);
+				NSPoint event_location = [evt locationInWindow];
+				NSPoint local_point = [theGameView convertPoint:event_location fromView:nil];
+				sys_event.mx      = local_point.x;
+				sys_event.my      = height - local_point.y;
+				sys_event.mb      = 0;
+				sys_event.code    = SIM_MOUSE_WHEELUP;
+			}
+			break;
+        }
+
         /* Multi-touch gestures */
         //case NSEventTypeMagnify:
             // Zoom in/out

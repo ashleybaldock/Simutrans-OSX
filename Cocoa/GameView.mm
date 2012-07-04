@@ -25,8 +25,6 @@ extern int width;
 extern int height;
 extern PIXVAL* screenbuf;
 
-//extern int g_argc;
-//extern char** g_argv;
 extern int sysmain(int, char**);
 
 GameView* theGameView;
@@ -117,7 +115,11 @@ STQueue* eventqueue = [[STQueue alloc] init];
 
 - (void)scrollWheel:(NSEvent *)theEvent
 {
-    [eventqueue enqueue:[theEvent copy]];
+	// Only trigger scrollwheel events if they come from a non-touch source
+	// TODO - need a more reliable way to do this!
+	if (!_tracking) {
+    	[eventqueue enqueue:[theEvent copy]];
+	}
 }
 
 - (void)viewDidMoveToWindow
@@ -125,6 +127,149 @@ STQueue* eventqueue = [[STQueue alloc] init];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowResized:) name:NSWindowDidResizeNotification object:[self window]];
     
+}
+
+
+
+
+- (void)touchesBeganWithEvent:(NSEvent *)event
+{
+	//if (!self.isEnabled) return;
+	
+    NSSet *touches = [event touchesMatchingPhase:NSTouchPhaseTouching inView:self];
+	
+    if (touches.count == 2) {
+        _initialPoint = [self convertPointFromBase:[event locationInWindow]];
+		
+        NSArray *array = [touches allObjects];
+		
+        _initialTouches[0] = [[array objectAtIndex:0] copy];
+        _initialTouches[1] = [[array objectAtIndex:1] copy];
+        _currentTouches[0] = _initialTouches[0];
+        _currentTouches[1] = _initialTouches[1];
+    } else if (touches.count > 2) {
+        // More than 2 touches. Only track 2.
+		[self cancelTracking];
+    }
+}
+
+- (void)touchesCancelledWithEvent:(NSEvent *)event
+{
+	[self cancelTracking];
+}
+
+- (void)touchesEndedWithEvent:(NSEvent *)event
+{
+	[self cancelTracking];
+}
+
+- (void)touchesMovedWithEvent:(NSEvent *)event
+{	
+    NSSet *touches = [event touchesMatchingPhase:NSTouchPhaseTouching inView:self];
+	
+    if (touches.count == 2 && _initialTouches[0]) {
+        NSArray *array = [touches allObjects];
+		
+        NSTouch *touch;
+		
+        touch = [array objectAtIndex:0];
+		
+        if ([touch.identity isEqual:_initialTouches[0].identity]) {
+            _currentTouches[0] = [touch copy];
+        } else {
+            _currentTouches[1] = [touch copy];
+        }
+		
+        touch = [array objectAtIndex:1];
+		
+        if ([touch.identity isEqual:_initialTouches[0].identity]) {
+            _currentTouches[0] = [touch copy];
+        } else {
+            _currentTouches[1] = [touch copy];
+        }
+		
+        if (!_tracking) {
+			// Not already tracking, store starting location
+            NSPoint dOrigin = [self deltaOrigin];
+            NSSize  dSize = [self deltaSize];
+            if (fabs(dOrigin.x) > _threshold ||
+                fabs(dOrigin.y) > _threshold ||
+                fabs(dSize.width) > _threshold ||
+                fabs(dSize.height) > _threshold) {
+                _tracking = YES;
+				// TODO here send message that move has begun
+				NSLog(@"Tracking begins");
+            }
+        } else {
+			// Calculate difference since last call
+			// Produce event + queue
+			// Store new start position
+			NSPoint dOrigin = [self deltaOrigin];
+            NSSize  dSize = [self deltaSize];
+            if (fabs(dOrigin.x) > _threshold ||
+                fabs(dOrigin.y) > _threshold ||
+                fabs(dSize.width) > _threshold ||
+                fabs(dSize.height) > _threshold) {
+                _tracking = YES;
+				// TODO here send message that move is ongoing
+				NSLog(@"Tracking continues, dOrigin: (%f,%f), dSize: (%f,%f)", dOrigin.x, dOrigin.y, dSize.width, dSize.height);
+				NSEvent* theEvent = [NSEvent otherEventWithType:NSApplicationDefined location:NSMakePoint(0.0,0.0) modifierFlags:0 timestamp:0 windowNumber:[[self window] windowNumber] context:[[self window] graphicsContext] subtype:10 data1:dSize.height data2:dSize.width];
+				[eventqueue enqueue:[theEvent copy]];
+			}
+        }
+    }
+}
+
+- (void)cancelTracking {
+    if (_tracking) {
+        //if (self.endTrackingAction) [NSApp sendAction:self.endTrackingAction to:self.view from:self];
+		// TODO send message to indicate that tracking has completed
+		NSLog(@"Tracking complete");
+        _tracking = NO;
+    }
+}
+
+- (NSPoint)deltaOrigin {
+    if (!(_initialTouches[0] && _initialTouches[1] &&
+		  _currentTouches[0] && _currentTouches[1])) return NSZeroPoint;
+	
+    CGFloat x1 = MIN(_initialTouches[0].normalizedPosition.x, _initialTouches[1].normalizedPosition.x);
+    CGFloat x2 = MAX(_currentTouches[0].normalizedPosition.x, _currentTouches[1].normalizedPosition.x);
+    CGFloat y1 = MIN(_initialTouches[0].normalizedPosition.y, _initialTouches[1].normalizedPosition.y);
+    CGFloat y2 = MAX(_currentTouches[0].normalizedPosition.y, _currentTouches[1].normalizedPosition.y);
+	
+    NSSize deviceSize = _initialTouches[0].deviceSize;
+    NSPoint delta;
+    delta.x = (x2 - x1) * deviceSize.width;
+    delta.y = (y2 - y1) * deviceSize.height;
+    return delta;
+}
+
+- (NSSize)deltaSize {
+    if (!(_initialTouches[0] && _initialTouches[1] && _currentTouches[0] && _currentTouches[1])) return NSZeroSize;
+	
+    CGFloat x1,x2,y1,y2,width1,width2,height1,height2;    
+    x1 = MIN(_initialTouches[0].normalizedPosition.x, _initialTouches[1].normalizedPosition.x);
+    x2 = MAX(_initialTouches[0].normalizedPosition.x, _initialTouches[1].normalizedPosition.x);
+    width1 = x2 - x1;
+	
+    y1 = MIN(_initialTouches[0].normalizedPosition.y, _initialTouches[1].normalizedPosition.y);
+    y2 = MAX(_initialTouches[0].normalizedPosition.y, _initialTouches[1].normalizedPosition.y);
+    height1 = y2 - y1;
+	
+    x1 = MIN(_currentTouches[0].normalizedPosition.x, _currentTouches[1].normalizedPosition.x);
+    x2 = MAX(_currentTouches[0].normalizedPosition.x, _currentTouches[1].normalizedPosition.x);
+    width2 = x2 - x1;
+	
+    y1 = MIN(_currentTouches[0].normalizedPosition.y, _currentTouches[1].normalizedPosition.y);
+    y2 = MAX(_currentTouches[0].normalizedPosition.y, _currentTouches[1].normalizedPosition.y);
+    height2 = y2 - y1;
+	
+    NSSize deviceSize = _initialTouches[0].deviceSize;
+    NSSize delta;
+    delta.width = (width2 - width1) * deviceSize.width;
+    delta.height = (height2 - height1) * deviceSize.height;
+    return delta;
 }
 
 /*- (void)dealloc
@@ -208,13 +353,16 @@ STQueue* eventqueue = [[STQueue alloc] init];
     // Initialization code here.
     
     [[self window] setAcceptsMouseMovedEvents:YES];
+	
+	// Touch stuff
+	[self setAcceptsTouchEvents:YES];
+	_tracking = NO;
+	_threshold = 1;
+	
     theGameView = self;
     screenbuf_lock = [[NSConditionLock alloc] initWithCondition:0];
     screenbuf_resizing = 0;
     game_quit = 0;
-	
-//	NSWindow* w = [[NSWindow alloc] init];
-//	[NSBundle loadNibNamed:@"Launcher" owner:w];
 
 
 	NSLog(@"%@", [[representedObject content] attributeKeys]);
