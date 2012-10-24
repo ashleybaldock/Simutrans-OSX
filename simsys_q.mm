@@ -174,7 +174,7 @@ unsigned int get_system_color(unsigned int r, unsigned int g, unsigned int b)
 /* Events */
 
 // Convert from Cocoa event modifier keys to Simutrans event ones
-unsigned int convert_modifier_keys(NSEvent* evt)
+static unsigned int convert_modifier_keys(NSEvent* evt)
 {
     // Currently only ctrl and shift are implemented for Simutrans
 	return
@@ -594,7 +594,7 @@ void dr_sleep(uint32 msec)
  * Indicate a section of the screen is dirty and needs redrawing
  * May be called multiple times by display_flush_buffer()
  */
-void dr_textur(int xp, int yp, int w, int h)
+void dr_textur(int __unused xp,int __unused yp, int __unused w, int __unused h)
 {
     //NSLog(@"dr_textur, x: %i, y: %i, w: %i, h: %i", xp, yp, w, h);
 

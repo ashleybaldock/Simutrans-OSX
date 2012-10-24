@@ -23,7 +23,7 @@
 
 - (id) init
 {
-    if (self = [super init])
+    if ((self = [super init]))
     {
         NSArray* keys      = [NSArray arrayWithObjects: @"paksetname", @"paksetdesc", nil];
         NSArray* values    = [NSArray arrayWithObjects: @"test pakset 1", @"Description of test pakset 1", nil];

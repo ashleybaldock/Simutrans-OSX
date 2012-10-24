@@ -8,7 +8,7 @@
 
 @implementation DownloadListItem
 
-- (id)initWithFrame:(NSRect)frame
+- (id)initWithFrame:(NSRect) __unused frame
 {
     if (self) {
         // Initialization code here.
@@ -17,12 +17,12 @@
     return self;
 }
 
-- (void)drawRect:(NSRect)dirtyRect
+- (void)drawRect:(NSRect) __unused dirtyRect
 {
     // Drawing code here.
 }
 
-- (IBAction)doButtons:(NSSegmentedControl*)sender {
+- (IBAction)doButtons:(NSSegmentedControl*) __unused sender {
 	NSString* s = [[self representedObject] valueForKey:@"paksetname"];
 	NSLog(@"Pakname is: %@", s);
 	[NSBundle loadNibNamed:@"GameView" owner:self];

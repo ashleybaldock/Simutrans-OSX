@@ -11,7 +11,7 @@
 
 @synthesize window = _window;
 
-- (void)applicationDidFinishLaunching:(NSNotification *)aNotification
+- (void)applicationDidFinishLaunching:(NSNotification *) __unused aNotification
 {
     // Insert code here to initialize your application
 }
@@ -40,7 +40,7 @@
     }
 }*/
 
-- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)theApplication
+- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *) __unused theApplication
 {
     return YES;
 }

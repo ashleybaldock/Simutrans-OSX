@@ -11,7 +11,7 @@
 
 @synthesize collection;
 
-- (IBAction)addAction:(id)sender {
+- (IBAction)addAction:(id) __unused sender {
 	int index = [[arrayController arrangedObjects] count];
 	[arrayController insertObject: [NSDictionary dictionaryWithObjectsAndKeys:@"Jon", @"Name", nil] atArrangedObjectIndex:index];
 }

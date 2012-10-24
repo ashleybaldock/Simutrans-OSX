@@ -161,12 +161,12 @@ STQueue* eventqueue = [[STQueue alloc] init];
     }
 }
 
-- (void)touchesCancelledWithEvent:(NSEvent *)event
+- (void)touchesCancelledWithEvent:(NSEvent *) __unused event
 {
 	[self cancelTracking];
 }
 
-- (void)touchesEndedWithEvent:(NSEvent *)event
+- (void)touchesEndedWithEvent:(NSEvent *) __unused event
 {
 	[self cancelTracking];
 }
@@ -310,7 +310,7 @@ STQueue* eventqueue = [[STQueue alloc] init];
     [super dealloc];
 }*/
 
-- (void)windowResized:(NSNotification *)notification
+- (void)windowResized:(NSNotification *) __unused notification
 {    
     NSSize size = self.frame.size;
     
@@ -398,10 +398,6 @@ STQueue* eventqueue = [[STQueue alloc] init];
 
 - (void)GameThreadMainRoutine
 {
-    // Do some work here.
-    
-    //NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-    
     NSLog(@"Thread spawned...");
 	
 	NSMutableArray* argvs = [[NSMutableArray alloc] init];
@@ -426,29 +422,15 @@ STQueue* eventqueue = [[STQueue alloc] init];
 	for (int i = 0; i < g_argc; i++) {
 		free(g_argv[i]);				// This doesn't work!!
 	}
-	
-    //[pool release];
 }
 
-/*- (BOOL)wantsUpdateLayer
-{
-	return NO;
-}*/
-
-/*- (BOOL)needsDisplay
-{
-	NSLog(@"needsDisplay");
-	return YES;
-}*/
-
-- (void)drawRect:(NSRect)dirtyRect
+- (void)drawRect:(NSRect) __unused dirtyRect
 {
 	// Create image from raw data wrapped in provider
 	if (width > 0 && height > 1)
 	{
 		// Lock screenbuf so main game thread cannot modify it
 		[screenbuf_lock lockWhenCondition:0];
-		//NSLog(@"drawRect %f,%f,%f,%f", dirtyRect.origin.x, dirtyRect.origin.y, dirtyRect.size.width, dirtyRect.size.height);
 
 		NSGraphicsContext* nsGraphicsContext = [NSGraphicsContext currentContext];
 		CGContextRef myContext = (CGContextRef) [nsGraphicsContext graphicsPort];
