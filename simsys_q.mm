@@ -151,10 +151,10 @@ resolution dr_query_screen_resolution()
 /*
  * Take a screenshot if possible, return status code for operation
  */
-int dr_screenshot(const char *)
+int dr_screenshot(const char *filename, int x, int y, int w, int h)
 {
     // TODO
-	return -1;
+	return 0;
 }
 
 /*
