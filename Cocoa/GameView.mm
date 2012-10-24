@@ -51,15 +51,6 @@ STQueue* eventqueue = [[STQueue alloc] init];
 
 // Event handling
 
-
-/*
- There should be a queue of simutrans events, which is added to here (in this thread) and read from
- in the game thread. Handling of double/triple click events needs some thought (may need a flag to indicate
- that this is handled by the OS and doesn't need to be done by the game)
- Copy+paste will need to be taken care of too, via the OSX-specific key combinations
- */
-
-
 - (void)mouseDown:(NSEvent *)theEvent
 {
     [eventqueue enqueue:[theEvent copy]];
@@ -117,20 +108,37 @@ STQueue* eventqueue = [[STQueue alloc] init];
 {
 	// Only trigger scrollwheel events if they come from a non-touch source
 	// TODO - need a more reliable way to do this!
-	if (!_tracking) {
+	if (false && !_tracking) {
     	[eventqueue enqueue:[theEvent copy]];
 	}
 }
 
 - (void)viewDidMoveToWindow
 {
-    
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowResized:) name:NSWindowDidResizeNotification object:[self window]];
     
 }
 
 
 
+- (void)cancelTracking {
+	//if (self.endTrackingAction) [NSApp sendAction:self.endTrackingAction to:self.view from:self];
+	// TODO send message to indicate that tracking has completed
+	if (_tracking) {
+		//NSLog(@"Tracking complete");
+		//NSPoint dOrigin = [self deltaOrigin];
+		NSEvent* theEvent = [NSEvent otherEventWithType:NSApplicationDefined location:NSZeroPoint modifierFlags:0 timestamp:0 windowNumber:[[self window] windowNumber] context:[[self window] graphicsContext] subtype:12 data1:0 data2:0];
+		[eventqueue enqueue:[theEvent copy]];
+
+		lastTouches[0] = nil;
+		lastTouches[0] = nil;
+		currentTouches[0] = nil;
+		currentTouches[0] = nil;
+		displacement = NSZeroSize;
+	
+		_tracking = NO;
+	}
+}
 
 - (void)touchesBeganWithEvent:(NSEvent *)event
 {
@@ -138,15 +146,15 @@ STQueue* eventqueue = [[STQueue alloc] init];
 	
     NSSet *touches = [event touchesMatchingPhase:NSTouchPhaseTouching inView:self];
 	
-    if (touches.count == 2) {
-        _initialPoint = [self convertPointFromBase:[event locationInWindow]];
-		
+    if (touches.count == 2) {		
         NSArray *array = [touches allObjects];
 		
-        _initialTouches[0] = [[array objectAtIndex:0] copy];
-        _initialTouches[1] = [[array objectAtIndex:1] copy];
-        _currentTouches[0] = _initialTouches[0];
-        _currentTouches[1] = _initialTouches[1];
+        lastTouches[0] = [[array objectAtIndex:0] copy];
+        lastTouches[1] = [[array objectAtIndex:1] copy];
+        currentTouches[0] = lastTouches[0];
+        currentTouches[1] = lastTouches[1];
+		displacement = NSZeroSize;
+		
     } else if (touches.count > 2) {
         // More than 2 touches. Only track 2.
 		[self cancelTracking];
@@ -167,28 +175,28 @@ STQueue* eventqueue = [[STQueue alloc] init];
 {	
     NSSet *touches = [event touchesMatchingPhase:NSTouchPhaseTouching inView:self];
 	
-    if (touches.count == 2 && _initialTouches[0]) {
+    if (touches.count == 2 && lastTouches[0]) {
         NSArray *array = [touches allObjects];
 		
         NSTouch *touch;
 		
         touch = [array objectAtIndex:0];
 		
-        if ([touch.identity isEqual:_initialTouches[0].identity]) {
-            _currentTouches[0] = [touch copy];
+        if ([touch.identity isEqual:lastTouches[0].identity]) {
+            currentTouches[0] = [touch copy];
         } else {
-            _currentTouches[1] = [touch copy];
+            currentTouches[1] = [touch copy];
         }
 		
         touch = [array objectAtIndex:1];
 		
-        if ([touch.identity isEqual:_initialTouches[0].identity]) {
-            _currentTouches[0] = [touch copy];
+        if ([touch.identity isEqual:lastTouches[0].identity]) {
+            currentTouches[0] = [touch copy];
         } else {
-            _currentTouches[1] = [touch copy];
+            currentTouches[1] = [touch copy];
         }
 		
-        if (!_tracking) {
+        /*if (!_tracking) {
 			// Not already tracking, store starting location
             NSPoint dOrigin = [self deltaOrigin];
             NSSize  dSize = [self deltaSize];
@@ -200,72 +208,96 @@ STQueue* eventqueue = [[STQueue alloc] init];
 				// TODO here send message that move has begun
 				NSLog(@"Tracking begins");
             }
-        } else {
+        } else {*/
+		if (_tracking) {
 			// Calculate difference since last call
 			// Produce event + queue
 			// Store new start position
-			NSPoint dOrigin = [self deltaOrigin];
-            NSSize  dSize = [self deltaSize];
-            if (fabs(dOrigin.x) > _threshold ||
+			//NSPoint dOrigin = [self deltaOrigin];
+            /*if (fabs(dOrigin.x) > _threshold ||
                 fabs(dOrigin.y) > _threshold ||
                 fabs(dSize.width) > _threshold ||
                 fabs(dSize.height) > _threshold) {
                 _tracking = YES;
 				// TODO here send message that move is ongoing
-				NSLog(@"Tracking continues, dOrigin: (%f,%f), dSize: (%f,%f)", dOrigin.x, dOrigin.y, dSize.width, dSize.height);
-				NSEvent* theEvent = [NSEvent otherEventWithType:NSApplicationDefined location:NSMakePoint(0.0,0.0) modifierFlags:0 timestamp:0 windowNumber:[[self window] windowNumber] context:[[self window] graphicsContext] subtype:10 data1:dSize.height data2:dSize.width];
+				//NSLog(@"Tracking continues, dOrigin: (%f,%f), dSize: (%f,%f)", dOrigin.x, dOrigin.y, dSize.width, dSize.height);*/
+			
+			// Find change from last location
+            NSSize dSize = [self deltaSize];
+			// Add to total displacement
+			displacement.width += dSize.width;
+			displacement.height += dSize.height;
+			
+			// If this is above threshold for event, trigger
+			if (fabs(displacement.width) > threshold || fabs(displacement.height) > threshold) {
+				
+				int w = (int) displacement.width;
+				int h = (int) displacement.height;
+				
+				NSPoint fakePoint = NSMakePoint(w, h);
+				NSEvent* theEvent = [NSEvent otherEventWithType:NSApplicationDefined location:fakePoint modifierFlags:0 timestamp:0 windowNumber:[[self window] windowNumber] context:[[self window] graphicsContext] subtype:10 data1:0 data2:0];
 				[eventqueue enqueue:[theEvent copy]];
+				
+				displacement.width -= w;
+				displacement.height -= h;
 			}
-        }
+        } else {
+			// Start of new touch event
+			displacement = NSZeroSize;
+			_tracking = YES;
+			
+			NSEvent* theEvent = [NSEvent otherEventWithType:NSApplicationDefined location:NSZeroPoint modifierFlags:0 timestamp:0 windowNumber:[[self window] windowNumber] context:[[self window] graphicsContext] subtype:11 data1:0 data2:0];
+			[eventqueue enqueue:[theEvent copy]];
+		}
+		
+		// Swap ready for next event
+        lastTouches[0] = currentTouches[0];
+        lastTouches[1] = currentTouches[1];
     }
 }
 
-- (void)cancelTracking {
-    if (_tracking) {
-        //if (self.endTrackingAction) [NSApp sendAction:self.endTrackingAction to:self.view from:self];
-		// TODO send message to indicate that tracking has completed
-		NSLog(@"Tracking complete");
-        _tracking = NO;
-    }
-}
 
 - (NSPoint)deltaOrigin {
-    if (!(_initialTouches[0] && _initialTouches[1] &&
-		  _currentTouches[0] && _currentTouches[1])) return NSZeroPoint;
+    if (!(lastTouches[0] && lastTouches[1] &&
+		  currentTouches[0] && currentTouches[1])) return NSZeroPoint;
 	
-    CGFloat x1 = MIN(_initialTouches[0].normalizedPosition.x, _initialTouches[1].normalizedPosition.x);
-    CGFloat x2 = MAX(_currentTouches[0].normalizedPosition.x, _currentTouches[1].normalizedPosition.x);
-    CGFloat y1 = MIN(_initialTouches[0].normalizedPosition.y, _initialTouches[1].normalizedPosition.y);
-    CGFloat y2 = MAX(_currentTouches[0].normalizedPosition.y, _currentTouches[1].normalizedPosition.y);
+    CGFloat x1 = MIN(lastTouches[0].normalizedPosition.x, lastTouches[1].normalizedPosition.x);
+    CGFloat x2 = MAX(currentTouches[0].normalizedPosition.x, currentTouches[1].normalizedPosition.x);
+    CGFloat y1 = MIN(lastTouches[0].normalizedPosition.y, lastTouches[1].normalizedPosition.y);
+    CGFloat y2 = MAX(currentTouches[0].normalizedPosition.y, currentTouches[1].normalizedPosition.y);
 	
-    NSSize deviceSize = _initialTouches[0].deviceSize;
+    NSSize deviceSize = lastTouches[0].deviceSize;
     NSPoint delta;
     delta.x = (x2 - x1) * deviceSize.width;
     delta.y = (y2 - y1) * deviceSize.height;
+	//NSLog(@"deviceSize, w: %f, h: %f", deviceSize.width, deviceSize.height);
     return delta;
 }
 
+
+// It's this code which doesn't work!!!
+// Need a better way to measure scroll displacement
 - (NSSize)deltaSize {
-    if (!(_initialTouches[0] && _initialTouches[1] && _currentTouches[0] && _currentTouches[1])) return NSZeroSize;
+    if (!(lastTouches[0] && lastTouches[1] && currentTouches[0] && currentTouches[1])) return NSZeroSize;
 	
     CGFloat x1,x2,y1,y2,width1,width2,height1,height2;    
-    x1 = MIN(_initialTouches[0].normalizedPosition.x, _initialTouches[1].normalizedPosition.x);
-    x2 = MAX(_initialTouches[0].normalizedPosition.x, _initialTouches[1].normalizedPosition.x);
+    x1 = MIN(lastTouches[0].normalizedPosition.x, lastTouches[1].normalizedPosition.x);
+    x2 = MAX(lastTouches[0].normalizedPosition.x, lastTouches[1].normalizedPosition.x);
     width1 = x2 - x1;
 	
-    y1 = MIN(_initialTouches[0].normalizedPosition.y, _initialTouches[1].normalizedPosition.y);
-    y2 = MAX(_initialTouches[0].normalizedPosition.y, _initialTouches[1].normalizedPosition.y);
+    y1 = MIN(lastTouches[0].normalizedPosition.y, lastTouches[1].normalizedPosition.y);
+    y2 = MAX(lastTouches[0].normalizedPosition.y, lastTouches[1].normalizedPosition.y);
     height1 = y2 - y1;
 	
-    x1 = MIN(_currentTouches[0].normalizedPosition.x, _currentTouches[1].normalizedPosition.x);
-    x2 = MAX(_currentTouches[0].normalizedPosition.x, _currentTouches[1].normalizedPosition.x);
+    x1 = MIN(currentTouches[0].normalizedPosition.x, currentTouches[1].normalizedPosition.x);
+    x2 = MAX(currentTouches[0].normalizedPosition.x, currentTouches[1].normalizedPosition.x);
     width2 = x2 - x1;
 	
-    y1 = MIN(_currentTouches[0].normalizedPosition.y, _currentTouches[1].normalizedPosition.y);
-    y2 = MAX(_currentTouches[0].normalizedPosition.y, _currentTouches[1].normalizedPosition.y);
+    y1 = MIN(currentTouches[0].normalizedPosition.y, currentTouches[1].normalizedPosition.y);
+    y2 = MAX(currentTouches[0].normalizedPosition.y, currentTouches[1].normalizedPosition.y);
     height2 = y2 - y1;
 	
-    NSSize deviceSize = _initialTouches[0].deviceSize;
+    NSSize deviceSize = lastTouches[0].deviceSize;
     NSSize delta;
     delta.width = (width2 - width1) * deviceSize.width;
     delta.height = (height2 - height1) * deviceSize.height;
@@ -333,20 +365,6 @@ STQueue* eventqueue = [[STQueue alloc] init];
 
 }
 
-- (id)initWithFrame:(NSRect)frame
-{
-    self = [super initWithFrame:frame];
-    if (self) {
-        NSLog(@"initWithFrame for GameView");
-        // Initialization code here.
-        theGameView = self;
-        screenbuf_lock = [[NSConditionLock alloc] initWithCondition:0];
-        screenbuf_resizing = 0;
-    }
-    
-    return self;
-}
-
 - (void)awakeFromNib
 {
     NSLog(@"awakeFromNib for GameView");
@@ -354,16 +372,18 @@ STQueue* eventqueue = [[STQueue alloc] init];
     
     [[self window] setAcceptsMouseMovedEvents:YES];
 	
+	// Necessary to make this work on 10.8
+	[self setWantsLayer:NO];
+	
 	// Touch stuff
 	[self setAcceptsTouchEvents:YES];
 	_tracking = NO;
-	_threshold = 1;
+	threshold = 1;
+	lastpoint = NSZeroPoint;
 	
     theGameView = self;
     screenbuf_lock = [[NSConditionLock alloc] initWithCondition:0];
-    screenbuf_resizing = 0;
     game_quit = 0;
-
 
 	NSLog(@"%@", [[representedObject content] attributeKeys]);
 	NSLog(@"%@", [[representedObject content] exposedBindings]);
@@ -410,155 +430,58 @@ STQueue* eventqueue = [[STQueue alloc] init];
     //[pool release];
 }
 
-- (void)lockScreenForRead
+/*- (BOOL)wantsUpdateLayer
 {
-    [screenbuf_lock lock];
-}
-- (void)lockScreenForWrite
+	return NO;
+}*/
+
+/*- (BOOL)needsDisplay
 {
-    [screenbuf_lock lock];
-}
-
-- (void)unlockScreen
-{
-    [screenbuf_lock unlock];
-}
-
-- (void)drawRect:(NSRect)dirtyRect
-{
-    //NSLog(@"drawRect %f,%f,%f,%f", dirtyRect.origin.x, dirtyRect.origin.y, dirtyRect.size.width, dirtyRect.size.height);
-
-    // Lock screenbuf so main game thread cannot modify it
-    [screenbuf_lock lockWhenCondition:0];
-        
-    NSGraphicsContext* nsGraphicsContext = [NSGraphicsContext currentContext];
-    CGContextRef myContext = (CGContextRef) [nsGraphicsContext graphicsPort];
-
-    // Create a data provider to permit access to the raw pixel array
-    CGDataProviderRef screenbuf_provider = CGDataProviderCreateWithData(screenbuf, screenbuf, width*height*2, nil);
-    
-    CGColorSpaceRef space = CGColorSpaceCreateDeviceRGB();
-    
-    // Create image from raw data wrapped in provider
-    CGImageRef img = CGImageCreate(width,                      // width
-                                   height,                     // height
-                                   5,                          // bitsPerComponent
-                                   16,                         // bitsPerPixel
-                                   width*2,                    // bytesPerRow
-                                   space,                      // colorspace
-                                   kCGBitmapByteOrder16Little|kCGImageAlphaNoneSkipFirst,  // bitmapInfo
-                                   screenbuf_provider,                   // CGDataProvider
-                                   NULL,                       // decode array
-                                   NO,                         // shouldInterpolate
-                                   kCGRenderingIntentDefault); // intent
-    
-    //NSBitmapImageRep* bmp = [[NSBitmapImageRep alloc] initWithCGImage:img];
-    // TODO - refrain from updating more than the changed area of the screen for efficiency
-    // Draw image to screen
-    //CGContextDrawImage(myContext, [self bounds], img);
-    //CGContextDrawImage(myContext, CGRectMake(0, 0, width, height), img);
-    
-    //CGFloat components[4] = {1.0, 0.5, 1.0, 1.0};
-    //CGContextSetFillColor(myContext, components);
-    //CGContextFillRect(myContext, CGRectMake(0, 0, width, height));
-    
-    //CGContextClipToRect(myContext, dirtyRect);
-    
-    CGContextDrawImage(myContext, CGRectMake(0, self.frame.size.height - height, width, height), img);
-    //CGContextDrawImage(myContext, CGRectMake(0, 0, self.frame.size.width, self.frame.size.height), img);
-    
-    // Clean up
-    CGImageRelease(img);
-    CGColorSpaceRelease(space);
-    // Release provider to permit game to render to memory again
-    CGDataProviderRelease(nil);
-    [screenbuf_lock unlockWithCondition:0];
-}
-
-/*- (BOOL)isFlipped
-{
+	NSLog(@"needsDisplay");
 	return YES;
 }*/
 
-/*- (void)viewWillStartLiveResize
+- (void)drawRect:(NSRect)dirtyRect
 {
-    [self lockScreen];
+	// Create image from raw data wrapped in provider
+	if (width > 0 && height > 1)
+	{
+		// Lock screenbuf so main game thread cannot modify it
+		[screenbuf_lock lockWhenCondition:0];
+		//NSLog(@"drawRect %f,%f,%f,%f", dirtyRect.origin.x, dirtyRect.origin.y, dirtyRect.size.width, dirtyRect.size.height);
 
-    if (self->screenbuf_resizing) {
-        NSLog(@"Everything's fucked");
-    }
+		NSGraphicsContext* nsGraphicsContext = [NSGraphicsContext currentContext];
+		CGContextRef myContext = (CGContextRef) [nsGraphicsContext graphicsPort];
 
-    // Create a data provider to permit access to the raw pixel array
-    CGDataProviderRef screenbuf_provider = CGDataProviderCreateWithData(screenbuf, screenbuf, width*height*2,screenbuf_releasedata);
-    
-    CGColorSpaceRef space = CGColorSpaceCreateDeviceRGB();
-    
-    // Create image from raw data wrapped in provider
-    CGImageRef img = CGImageCreate(width,                      // width
-                                   height,                     // height
-                                   5,                          // bitsPerComponent
-                                   16,                         // bitsPerPixel
-                                   width*2,                    // bytesPerRow
-                                   space,                      // colorspace
-                                   kCGBitmapByteOrder16Little|kCGImageAlphaNoneSkipFirst,  // bitmapInfo
-                                   screenbuf_provider,                   // CGDataProvider
-                                   NULL,                       // decode array
-                                   NO,                         // shouldInterpolate
-                                   kCGRenderingIntentDefault); // intent
-    
-    if (resize_cache_image != NULL) {
-        CGImageRelease(resize_cache_image);
-        resize_cache_image = NULL;
-    }
-    resize_cache_image = CGImageCreateCopy(img);
-    
-    // Clean up
-    CGImageRelease(img);
-    CGColorSpaceRelease(space);
-    // Release provider to permit game to render to memory again
-    CGDataProviderRelease(screenbuf_provider);
-    [theGameView unlockScreen];
+		// Create a data provider to permit access to the raw pixel array
+		CGDataProviderRef screenbuf_provider = CGDataProviderCreateWithData(screenbuf, screenbuf, width*height*2, nil);
+		
+		CGColorSpaceRef space = CGColorSpaceCreateDeviceRGB();
+		
+
+		
+		CGImageRef img = CGImageCreate(width,                      // width
+									   height,                     // height
+									   5,                          // bitsPerComponent
+									   16,                         // bitsPerPixel
+									   width*2,                    // bytesPerRow
+									   space,                      // colorspace
+									   kCGBitmapByteOrder16Little|kCGImageAlphaNoneSkipFirst,  // bitmapInfo
+									   screenbuf_provider,                   // CGDataProvider
+									   NULL,                       // decode array
+									   NO,                         // shouldInterpolate
+									   kCGRenderingIntentDefault); // intent
+		
+		CGContextDrawImage(myContext, CGRectMake(0, self.frame.size.height - height, width, height), img);
+		
+		// Clean up
+		CGImageRelease(img);
+		CGColorSpaceRelease(space);
+		// Release provider to permit game to render to memory again
+		CGDataProviderRelease(nil);
+		[screenbuf_lock unlockWithCondition:0];
+	}
 }
-
-- (void)viewDidEndLiveResize
-{
-    if (resize_cache_image != NULL) {
-        CGImageRelease(resize_cache_image);
-        resize_cache_image = NULL;
-    }
-}*/
-
-/*- (BOOL)preservesContentDuringLiveResize
-{
-    return YES;
-}
-
-- (void)setFrameSize:(NSSize)newSize
-{
-    [super setFrameSize:newSize];
-    
-    [self setNeedsDisplay:NO];
-    
-    // A change in size has required the view to be invalidated.
-    if ([self inLiveResize])
-    {
-        NSRect rects[4];
-        NSInteger count;
-        [self getRectsExposedDuringLiveResize:rects count:&count];
-        while (count-- > 0)
-        {
-            NSLog(@"Rect: %f, %f, %f, %f", rects[count].origin.x, rects[count].origin.y, rects[count].size.width, rects[count].size.height);
-            [self setNeedsDisplayInRect:rects[count]];
-        }
-        NSRect rect = NSMakeRect(0, 0, 100, 100);
-        //[self setNeedsDisplayInRect:rect];
-        
-    }
-    else
-    {
-        //[self setNeedsDisplay:YES];
-    }
-}*/
 
 - (BOOL)isOpaque
 {

@@ -11,16 +11,14 @@
 	IBOutlet NSObjectController* representedObject;
     NSConditionLock* screenbuf_lock;    // 0 = Normal, 1 = resizing
     int game_quit;
-    int screenbuf_resizing;
 	
 	// Touch event stuff
-	CGFloat _threshold;
-	NSTouch* _initialTouches[2];
-	NSTouch* _lastTouches[2];
-	NSTouch* _currentTouches[2];
-	NSPoint _initialPoint;
+	CGFloat threshold;
+	NSTouch* lastTouches[2];
+	NSTouch* currentTouches[2];
 	BOOL _tracking;
-	NSSize lastDisplacement;
+	NSSize displacement;
+	NSPoint lastpoint;
 }
 
 - (void)trigger_quit;

@@ -189,6 +189,8 @@ unsigned int convert_modifier_keys(NSEvent* evt)
 
 static void internal_GetEvents(bool wait)
 {
+	static NSPoint last_mouse_pos = NSMakePoint(-1, -1);
+	
     NSEvent* evt;
     // Pick up an event from the queue (blocking or non-blocking)
     if (wait)
@@ -214,8 +216,8 @@ static void internal_GetEvents(bool wait)
             NSLog(@"Left mouse down event made it to internal_GetEvents");
             sys_event.type    = SIM_MOUSE_BUTTONS;
 			sys_event.key_mod = convert_modifier_keys(evt);
-            NSPoint event_location = [evt locationInWindow];
-            NSPoint local_point = [theGameView convertPoint:event_location fromView:nil];
+            last_mouse_pos = [evt locationInWindow];
+            NSPoint local_point = [theGameView convertPoint:last_mouse_pos fromView:nil];
 			sys_event.mx      = local_point.x;
 			sys_event.my      = height - local_point.y;
 			sys_event.mb      = SIM_MOUSE_LEFTBUTTON;
@@ -227,8 +229,8 @@ static void internal_GetEvents(bool wait)
             NSLog(@"Right mouse down event made it to internal_GetEvents");
             sys_event.type    = SIM_MOUSE_BUTTONS;
 			sys_event.key_mod = convert_modifier_keys(evt);
-            NSPoint event_location = [evt locationInWindow];
-            NSPoint local_point = [theGameView convertPoint:event_location fromView:nil];
+            last_mouse_pos = [evt locationInWindow];
+            NSPoint local_point = [theGameView convertPoint:last_mouse_pos fromView:nil];
 			sys_event.mx      = local_point.x;
 			sys_event.my      = height - local_point.y;
 			sys_event.mb      = SIM_MOUSE_RIGHTBUTTON;
@@ -248,8 +250,8 @@ static void internal_GetEvents(bool wait)
             NSLog(@"Left mouse up event made it to internal_GetEvents");
 			sys_event.type    = SIM_MOUSE_BUTTONS;
 			sys_event.key_mod = convert_modifier_keys(evt);
-            NSPoint event_location = [evt locationInWindow];
-            NSPoint local_point = [theGameView convertPoint:event_location fromView:nil];
+            last_mouse_pos = [evt locationInWindow];
+            NSPoint local_point = [theGameView convertPoint:last_mouse_pos fromView:nil];
 			sys_event.mx      = local_point.x;
 			sys_event.my      = height - local_point.y;
             sys_event.mb      = MOUSE_LEFTBUTTON;
@@ -261,8 +263,8 @@ static void internal_GetEvents(bool wait)
             NSLog(@"Right mouse up event made it to internal_GetEvents");
 			sys_event.type    = SIM_MOUSE_BUTTONS;
 			sys_event.key_mod = convert_modifier_keys(evt);
-            NSPoint event_location = [evt locationInWindow];
-            NSPoint local_point = [theGameView convertPoint:event_location fromView:nil];
+            last_mouse_pos = [evt locationInWindow];
+            NSPoint local_point = [theGameView convertPoint:last_mouse_pos fromView:nil];
 			sys_event.mx      = local_point.x;
 			sys_event.my      = height - local_point.y;
             sys_event.mb      = MOUSE_RIGHTBUTTON;
@@ -279,8 +281,10 @@ static void internal_GetEvents(bool wait)
         {
             sys_event.type    = SIM_MOUSE_MOVE;
             sys_event.key_mod = convert_modifier_keys(evt);
-            NSPoint event_location = [evt locationInWindow];
-            NSPoint local_point = [theGameView convertPoint:event_location fromView:nil];
+            last_mouse_pos = [evt locationInWindow];
+			//NSLog(@"mouse moved newpos: (%f,%f)", last_mouse_pos.x, last_mouse_pos.y);
+            NSPoint local_point = [theGameView convertPoint:last_mouse_pos fromView:nil];
+			//NSLog(@"local_point: (%f,%f)", local_point.x, local_point.y);
             sys_event.mx      = local_point.x;
 			sys_event.my      = height - local_point.y;
             sys_event.mb      = 0;
@@ -292,8 +296,8 @@ static void internal_GetEvents(bool wait)
         {
             sys_event.type    = SIM_MOUSE_MOVE;
             sys_event.key_mod = convert_modifier_keys(evt);
-            NSPoint event_location = [evt locationInWindow];
-            NSPoint local_point = [theGameView convertPoint:event_location fromView:nil];
+            last_mouse_pos = [evt locationInWindow];
+            NSPoint local_point = [theGameView convertPoint:last_mouse_pos fromView:nil];
             sys_event.mx      = local_point.x;
 			sys_event.my      = height - local_point.y;
             sys_event.mb      = MOUSE_LEFTBUTTON;
@@ -305,8 +309,8 @@ static void internal_GetEvents(bool wait)
         {
             sys_event.type    = SIM_MOUSE_MOVE;
             sys_event.key_mod = convert_modifier_keys(evt);
-            NSPoint event_location = [evt locationInWindow];
-            NSPoint local_point = [theGameView convertPoint:event_location fromView:nil];
+            last_mouse_pos = [evt locationInWindow];
+            NSPoint local_point = [theGameView convertPoint:last_mouse_pos fromView:nil];
             sys_event.mx      = local_point.x;
 			sys_event.my      = height - local_point.y;
             sys_event.mb      = MOUSE_RIGHTBUTTON;
@@ -426,11 +430,40 @@ static void internal_GetEvents(bool wait)
                 }
 				case 10:
 				{
-					NSLog(@"Custom touch event");
 					sys_event.type = SIM_TOUCH;
 					sys_event.code = SIM_TOUCH_SCROLL;
-					sys_event.mx = evt.data1;
-					sys_event.my = evt.data2;
+					NSPoint event_location = [evt locationInWindow];
+					NSSize displacement = NSMakeSize(event_location.x, event_location.y);
+					//NSPoint local_point = [theGameView convertPoint:event_location fromView:nil];
+					NSLog(@"Last pos: (%f,%f)", last_mouse_pos.x, last_mouse_pos.y);
+					sys_event.mx      = displacement.height * 10;
+					sys_event.my      = displacement.width * 10;
+					//sys_event.mx      = 0; // -ve left, +ve right
+					//sys_event.my      = 10; // -ve up, +ve down
+					NSLog(@"Custom touch event, (%f,%f), (%d,%d)", event_location.x, event_location.y, sys_event.mx, sys_event.my);
+					//last_mouse_pos = NSMakePoint(last_mouse_pos.x + displacement.width, last_mouse_pos.y + (-1 * displacement.height));
+					break;
+				}
+				case 11:
+				{
+					sys_event.type = SIM_TOUCH_BEGIN;
+					sys_event.code = SIM_TOUCH_SCROLL;
+					NSPoint event_location = [evt locationInWindow];
+					//NSPoint local_point = [theGameView convertPoint:event_location fromView:nil];
+					sys_event.mx      = last_mouse_pos.x;
+					sys_event.my      = last_mouse_pos.y;
+					NSLog(@"Custom touch event (begin), (%f,%f), last: (%f,%f)", event_location.x, event_location.y, last_mouse_pos.x, last_mouse_pos.y);
+					break;
+				}
+				case 12:
+				{
+					sys_event.type = SIM_TOUCH_END;
+					sys_event.code = SIM_TOUCH_SCROLL;
+					NSPoint event_location = [evt locationInWindow];
+					//NSPoint local_point = [theGameView convertPoint:event_location fromView:nil];
+					sys_event.mx      = last_mouse_pos.x;
+					sys_event.my      = last_mouse_pos.y;
+					NSLog(@"Custom touch event (end), (%f,%f), last: (%f,%f)", event_location.x, event_location.y, last_mouse_pos.x, last_mouse_pos.y);
 					break;
 				}
 
@@ -569,7 +602,7 @@ void dr_textur(int xp, int yp, int w, int h)
     // This will automatically cause a redraw at the next point one would normally occur
 
     // Coords need to be translated by flipping them vertically
-    NSRect rect = NSMakeRect(xp, height - yp - h, w, h);
+    //NSRect rect = NSMakeRect(xp, height - yp - h, w, h);
     
     // TODO add these rects together to form the eventual dirty area for the next redraw
     // If we add them peicemeal then the other thread will update arbitrary areas of the screen out of sync!
@@ -587,7 +620,6 @@ void dr_prepare_flush()
 {
     // Block on obtain lock on surface
     [theGameView->screenbuf_lock lock];
-
 }
 
 /*
@@ -597,17 +629,18 @@ void dr_prepare_flush()
  */
 void dr_flush()
 {
-    // Call method to queue up rects for screen update via dr_textur()
+	// Call method to queue up rects for screen update via dr_textur()
     display_flush_buffer();
-    
-    // Let UI thread know that screen needs to be redrawn
-    [theGameView setNeedsDisplay:YES];
-    
-    // Screen redrawn after previous resize operation, so now safe to draw again
-    theGameView->screenbuf_resizing = 0;
     
     // When drawing done, release lock
     [theGameView->screenbuf_lock unlockWithCondition:0];
+
+    // Let UI thread know that screen needs to be redrawn
+    [theGameView setNeedsDisplay:YES];
+	[[theGameView window] setViewsNeedDisplay:YES];
+		
+	//[theGameView display];
+
 }
 
 /*
