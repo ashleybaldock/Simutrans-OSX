@@ -275,12 +275,42 @@ STQueue* eventqueue = [[STQueue alloc] init];
 }
 
 
+
+/*
+ 
+ Store initial position, interrupt if needed
+ 
+ Movement from last position as displacement
+ Move by proportion to maximum extent?
+ 
+ Two touch points, each has x and y displacement
+ Sum of x and y displacement gives total
+ 
+ */
+
+
+
 // It's this code which doesn't work!!!
 // Need a better way to measure scroll displacement
 - (NSSize)deltaSize {
     if (!(lastTouches[0] && lastTouches[1] && currentTouches[0] && currentTouches[1])) return NSZeroSize;
 	
-    CGFloat x1,x2,y1,y2,width1,width2,height1,height2;    
+	NSSize delta;
+	NSSize deviceSize = lastTouches[0].deviceSize;
+	
+	CGFloat x0 = currentTouches[0].normalizedPosition.x - lastTouches[0].normalizedPosition.x;
+	CGFloat x1 = currentTouches[1].normalizedPosition.x - lastTouches[1].normalizedPosition.x;
+	
+	CGFloat y0 = currentTouches[0].normalizedPosition.y - lastTouches[0].normalizedPosition.y;
+	CGFloat y1 = currentTouches[1].normalizedPosition.y - lastTouches[1].normalizedPosition.y;
+
+	delta.width = (x0 + x1) * deviceSize.width;
+	delta.height = (y0 + y1) * deviceSize.height * -1;
+	
+	return delta;
+	
+	
+    /*CGFloat x1,x2,y1,y2,width1,width2,height1,height2;
     x1 = MIN(lastTouches[0].normalizedPosition.x, lastTouches[1].normalizedPosition.x);
     x2 = MAX(lastTouches[0].normalizedPosition.x, lastTouches[1].normalizedPosition.x);
     width1 = x2 - x1;
@@ -301,7 +331,7 @@ STQueue* eventqueue = [[STQueue alloc] init];
     NSSize delta;
     delta.width = (width2 - width1) * deviceSize.width;
     delta.height = (height2 - height1) * deviceSize.height;
-    return delta;
+    return delta;*/
 }
 
 /*- (void)dealloc

@@ -436,8 +436,8 @@ static void internal_GetEvents(bool wait)
 					NSSize displacement = NSMakeSize(event_location.x, event_location.y);
 					//NSPoint local_point = [theGameView convertPoint:event_location fromView:nil];
 					NSLog(@"Last pos: (%f,%f)", last_mouse_pos.x, last_mouse_pos.y);
-					sys_event.mx      = displacement.height * 10;
-					sys_event.my      = displacement.width * 10;
+					sys_event.mx      = displacement.width;
+					sys_event.my      = displacement.height;
 					//sys_event.mx      = 0; // -ve left, +ve right
 					//sys_event.my      = 10; // -ve up, +ve down
 					NSLog(@"Custom touch event, (%f,%f), (%d,%d)", event_location.x, event_location.y, sys_event.mx, sys_event.my);
