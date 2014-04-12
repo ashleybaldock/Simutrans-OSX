@@ -32,6 +32,7 @@
 {
     [lock lock];
     [elements addObject:object];
+	//NSLog(@"enqueue, queue length: %lu", (unsigned long)[elements count]);
     [lock unlockWithCondition:1];
 }
 
@@ -39,6 +40,7 @@
 {
     [lock lock];
     [elements insertObject:object atIndex:0];
+	//NSLog(@"enqueueAtFront, queue length: %lu", (unsigned long)[elements count]);
     [lock unlockWithCondition:1];
 }
 
@@ -54,6 +56,7 @@
 //        element = [[[elements objectAtIndex:0] retain] autorelease];
         element = [elements objectAtIndex:0];
         [elements removeObjectAtIndex:0];
+		//NSLog(@"dequeue, queue length: %lu", (unsigned long)[elements count]);
     }
     [lock unlockWithCondition:([elements count] > 0) ? 1 : 0];
     return element;
@@ -68,6 +71,7 @@
 //    id element = [[[elements objectAtIndex:0] retain] autorelease];
     id element = [elements objectAtIndex:0];
     [elements removeObjectAtIndex:0];
+	//NSLog(@"dequeueBlock, queue length: %lu", (unsigned long)[elements count]);
     
     [lock unlockWithCondition:([elements count] > 0) ? 1 : 0];
     return element;

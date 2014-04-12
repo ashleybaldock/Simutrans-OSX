@@ -427,48 +427,19 @@ static void internal_GetEvents(bool wait)
                     sys_event.code = SIM_SYSTEM_QUIT;
                     break;
                 }
-				case SIM_TOUCH_SCROLL_UP:
+				case SIM_TOUCH_SCROLL:
 				{
 					sys_event.type = SIM_TOUCH;
-					sys_event.code = SIM_TOUCH_SCROLL_UP;
-					sys_event.magnitude = evt.data1;
-					NSLog(@"SIM_TOUCH_SCROLL_UP event (%ld)", evt.data1);
-					break;
-				}
-				case SIM_TOUCH_SCROLL_DOWN:
-				{
-					sys_event.type = SIM_TOUCH;
-					sys_event.code = SIM_TOUCH_SCROLL_DOWN;
-					sys_event.magnitude = evt.data1;
-					NSLog(@"SIM_TOUCH_SCROLL_DOWN event (%ld)", evt.data1);
-					break;
-				}
-				case SIM_TOUCH_SCROLL_LEFT:
-				{
-					sys_event.type = SIM_TOUCH;
-					sys_event.code = SIM_TOUCH_SCROLL_LEFT;
-					sys_event.magnitude = evt.data1;
-					NSLog(@"SIM_TOUCH_SCROLL_LEFT event (%ld)", evt.data1);
-					break;
-				}
-				case SIM_TOUCH_SCROLL_RIGHT:
-				{
-					sys_event.type = SIM_TOUCH;
-					sys_event.code = SIM_TOUCH_SCROLL_RIGHT;
-					sys_event.magnitude = evt.data1;
-					NSLog(@"SIM_TOUCH_SCROLL_RIGHT event (%ld)", evt.data1);
+					sys_event.code = SIM_TOUCH_SCROLL;
+					sys_event.mx = evt.data1;
+					sys_event.my = evt.data2;
 					break;
 				}
             }
             break;
         }
-        // NSScrollWheelMask??
         case NSScrollWheel:
         {
-            // Need to detect if event comes from a multi-touch trackpad or from a mouse
-            // If from a mouse, then zoom in/zoom out
-            // If from trackpad, two-finger scrolling should move around (like a right-mouse-drag)
-                // Should be interpreted by the game as scroll wheel events? How about scrolling within dialogs?
             if ([evt deltaY] > 0.0) {
 				NSLog(@"Scrollwheel (down) event made it to internal_GetEvents");
 				sys_event.type    = SIM_MOUSE_BUTTONS;

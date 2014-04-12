@@ -107,8 +107,31 @@ STQueue* eventqueue = [[STQueue alloc] init];
 
 - (void)scrollWheel:(NSEvent *)theEvent {
 	// Only trigger scrollwheel events if they come from a non-touch source
-	if (false && !_tracking) {
-    	[eventqueue enqueue:[theEvent copy]];
+	Boolean Touchpad = true;
+	
+	if (Touchpad) {
+		// Process as touch event
+		NSEvent* touchEvent = [NSEvent otherEventWithType:NSApplicationDefined location:NSZeroPoint modifierFlags:0 timestamp:0 windowNumber:[[self window] windowNumber] context:[[self window] graphicsContext] subtype:SIM_TOUCH_SCROLL data1:[theEvent deltaX] data2:[theEvent deltaY]];
+		[eventqueue enqueue:[touchEvent copy]];
+
+/*	if ([theEvent deltaX] > 0) {
+		NSEvent* touchEvent = [NSEvent otherEventWithType:NSApplicationDefined location:NSZeroPoint modifierFlags:0 timestamp:0 windowNumber:[[self window] windowNumber] context:[[self window] graphicsContext] subtype:SIM_TOUCH_SCROLL_RIGHT data1:abs([theEvent deltaX]) data2:0];
+		[eventqueue enqueue:[touchEvent copy]];
+	} else if ([theEvent deltaX] < 0) {
+		NSEvent* touchEvent = [NSEvent otherEventWithType:NSApplicationDefined location:NSZeroPoint modifierFlags:0 timestamp:0 windowNumber:[[self window] windowNumber] context:[[self window] graphicsContext] subtype:SIM_TOUCH_SCROLL_LEFT data1:abs([theEvent deltaX]) data2:0];
+		[eventqueue enqueue:[touchEvent copy]];
+	}
+	
+	if ([theEvent deltaY] < 0) {
+		NSEvent* touchEvent = [NSEvent otherEventWithType:NSApplicationDefined location:NSZeroPoint modifierFlags:0 timestamp:0 windowNumber:[[self window] windowNumber] context:[[self window] graphicsContext] subtype:SIM_TOUCH_SCROLL_UP data1:abs([theEvent deltaY]) data2:0];
+		[eventqueue enqueue:[touchEvent copy]];
+	} else if ([theEvent deltaY] > 0) {
+		NSEvent* touchEvent = [NSEvent otherEventWithType:NSApplicationDefined location:NSZeroPoint modifierFlags:0 timestamp:0 windowNumber:[[self window] windowNumber] context:[[self window] graphicsContext] subtype:SIM_TOUCH_SCROLL_DOWN data1:abs([theEvent deltaY]) data2:0];
+		[eventqueue enqueue:[touchEvent copy]];
+	}*/
+	} else {
+		// Process as scrollwheel event
+		[eventqueue enqueue:[theEvent copy]];
 	}
 }
 
@@ -140,7 +163,7 @@ STQueue* eventqueue = [[STQueue alloc] init];
 
 
 
-- (void)cancelTracking {
+/*- (void)cancelTracking {
 	touchesDisplacementFromTouchOrigin[0] = NSZeroSize;
 	touchesDisplacementFromTouchOrigin[1] = NSZeroSize;
 	lastTouches[0] = currentTouches[0] = nil;
@@ -284,7 +307,7 @@ STQueue* eventqueue = [[STQueue alloc] init];
 			lastTime = currentTime;
 		}
 	}
-}
+}*/
 
 
 /*- (void)dealloc
@@ -317,7 +340,7 @@ STQueue* eventqueue = [[STQueue alloc] init];
  */
 - (void)game_trigger_quit
 {
-    NSLog(@"Game quit event triggered!!!");
+    NSLog(@"Game quit event triggered");
     // Send quit event to the game thread
     // When game quits, it will send back a message indicating this (via dr_os_quit())
     if (game_quit == 0) {
@@ -339,7 +362,7 @@ STQueue* eventqueue = [[STQueue alloc] init];
  */
 - (void)trigger_quit
 {
-    NSLog(@"Quit event triggered!!!");
+    NSLog(@"Quit event triggered");
     // Send quit event to the game thread
     // When game quits, it will send back a message (via dr_os_quit())
     NSEvent *theEvent = [NSEvent otherEventWithType:NSApplicationDefined location:NSZeroPoint modifierFlags:0 timestamp:0 windowNumber:0 context:0 subtype:2 data1:0 data2:0];
@@ -359,7 +382,7 @@ STQueue* eventqueue = [[STQueue alloc] init];
 	[self setWantsLayer:NO];
 	
 	// Touch stuff
-	[self setAcceptsTouchEvents:YES];
+	//[self setAcceptsTouchEvents:YES];
 	_tracking = NO;
 	threshold = 0.05;
 	step = 0.01;
@@ -368,11 +391,9 @@ STQueue* eventqueue = [[STQueue alloc] init];
     screenbuf_lock = [[NSConditionLock alloc] initWithCondition:0];
     game_quit = 0;
 
-	NSLog(@"%@", [[representedObject content] attributeKeys]);
-	NSLog(@"%@", [[representedObject content] exposedBindings]);
+	NSLog(@"representedObject: content - attributeKeys: %@", [[representedObject content] attributeKeys]);
+	NSLog(@"representedObject: content - exposedBindings: %@", [[representedObject content] exposedBindings]);
 	
-	
-	NSLog(@"awakeFromNib, paksetname is: %@", [[representedObject content] valueForKey:@"paksetname"]);
 	
     // Spawn main game thread
     [NSThread detachNewThreadSelector:@selector(GameThreadMainRoutine) toTarget:self withObject:nil];
