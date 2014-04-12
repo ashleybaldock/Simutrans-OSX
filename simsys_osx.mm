@@ -86,30 +86,6 @@ char const* dr_query_objdir()
 
 
 /*
- * Hook to permit use of OS-native file loading window
- * To display in-game load window, return false
- */
-bool dr_native_load()
-{
-	// TODO - call method to display save dialog
-	// TODO - implement a special event which will be posted to the game thread
-	//        if a file is to be loaded, which triggers the game to actually load it
-	//        We will have permission to read the file at that point thanks to Powerbox
-	return false;
-}
-
-/*
- * Hook to permit use of OS-native file saving window
- * To display in-game load window, return false
- */
-bool dr_native_save()
-{
-	// TODO - call method to display save dialog
-	return false;
-}
-
-
-/*
  * This retrieves the 2 byte string for the default language
  */
 const char *dr_get_locale_string()

@@ -7,6 +7,7 @@
 #import "GameView.h"
 #import "STQueue.h"
 #import "AppDelegate.h"
+#include "../simsys.h"
 
 // This is all set up in simsys_q.mm
 #ifndef COLOUR_DEPTH
@@ -98,66 +99,69 @@ STQueue* eventqueue = [[STQueue alloc] init];
 }
 
 // Modifier key flags have changed (e.g. ctrl pressed)
-- (void)flagsChanged:(NSEvent *)theEvent
-{
+- (void)flagsChanged:(NSEvent *)theEvent {
     [eventqueue enqueue:[theEvent copy]];
 }
 
 
-- (void)scrollWheel:(NSEvent *)theEvent
-{
+
+- (void)scrollWheel:(NSEvent *)theEvent {
 	// Only trigger scrollwheel events if they come from a non-touch source
-	// TODO - need a more reliable way to do this!
 	if (false && !_tracking) {
     	[eventqueue enqueue:[theEvent copy]];
 	}
 }
 
-- (void)viewDidMoveToWindow
-{
+- (void)viewDidMoveToWindow {
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowResized:) name:NSWindowDidResizeNotification object:[self window]];
     
 }
 
 
+- (void)rotateWithEvent:(NSEvent *)event {
+	NSLog(@"Rotation in degree is %f", event.rotation);
+	if (event.rotation > 45) {
+		// Counterclockwise
+		NSEvent* theEvent = [NSEvent otherEventWithType:NSApplicationDefined location:NSZeroPoint modifierFlags:0 timestamp:0 windowNumber:[[self window] windowNumber] context:[[self window] graphicsContext] subtype:SIM_TOUCH_ROTATE_LEFT data1:1 data2:0];
+		[eventqueue enqueue:[theEvent copy]];
+	} else if (event.rotation < 45) {
+		// Clockwise
+		NSEvent* theEvent = [NSEvent otherEventWithType:NSApplicationDefined location:NSZeroPoint modifierFlags:0 timestamp:0 windowNumber:[[self window] windowNumber] context:[[self window] graphicsContext] subtype:SIM_TOUCH_ROTATE_RIGHT data1:1 data2:0];
+		[eventqueue enqueue:[theEvent copy]];
+	}
+}
+
+- (void)magnifyWithEvent:(NSEvent *)event {
+	NSLog(@"Magnification value is %f", [event magnification]);
+	//NSEvent* theEvent = [NSEvent otherEventWithType:NSApplicationDefined location:NSZeroPoint modifierFlags:0 timestamp:0 windowNumber:[[self window] windowNumber] context:[[self window] graphicsContext] subtype:SIM_TOUCH_SCROLL_RIGHT data1:abs(xsteps) data2:0];
+	//[eventqueue enqueue:[theEvent copy]];
+
+}
+
+
 
 - (void)cancelTracking {
-	//if (self.endTrackingAction) [NSApp sendAction:self.endTrackingAction to:self.view from:self];
-	// TODO send message to indicate that tracking has completed
-	if (_tracking) {
-		//NSLog(@"Tracking complete");
-		//NSPoint dOrigin = [self deltaOrigin];
-		NSEvent* theEvent = [NSEvent otherEventWithType:NSApplicationDefined location:NSZeroPoint modifierFlags:0 timestamp:0 windowNumber:[[self window] windowNumber] context:[[self window] graphicsContext] subtype:12 data1:0 data2:0];
-		[eventqueue enqueue:[theEvent copy]];
-
-		lastTouches[0] = nil;
-		lastTouches[0] = nil;
-		currentTouches[0] = nil;
-		currentTouches[0] = nil;
-		displacement = NSZeroSize;
+	touchesDisplacementFromTouchOrigin[0] = NSZeroSize;
+	touchesDisplacementFromTouchOrigin[1] = NSZeroSize;
+	lastTouches[0] = currentTouches[0] = nil;
+	lastTouches[1] = currentTouches[1] = nil;
+	lastTime = currentTime = 0;
 	
-		_tracking = NO;
-	}
+	_tracking = NO;
 }
 
 - (void)touchesBeganWithEvent:(NSEvent *)event
 {
-	//if (!self.isEnabled) return;
-	
+	[self cancelTracking];
+
     NSSet *touches = [event touchesMatchingPhase:NSTouchPhaseTouching inView:self];
 	
     if (touches.count == 2) {		
         NSArray *array = [touches allObjects];
-		
-        lastTouches[0] = [[array objectAtIndex:0] copy];
-        lastTouches[1] = [[array objectAtIndex:1] copy];
-        currentTouches[0] = lastTouches[0];
-        currentTouches[1] = lastTouches[1];
-		displacement = NSZeroSize;
-		
-    } else if (touches.count > 2) {
-        // More than 2 touches. Only track 2.
-		[self cancelTracking];
+        lastTouches[0] = currentTouches[0] = [[array objectAtIndex:0] copy];
+        lastTouches[1] = currentTouches[1] = [[array objectAtIndex:1] copy];
+		lastTime = currentTime = [event timestamp];
+		_tracking = YES;
     }
 }
 
@@ -172,7 +176,7 @@ STQueue* eventqueue = [[STQueue alloc] init];
 }
 
 - (void)touchesMovedWithEvent:(NSEvent *)event
-{	
+{
     NSSet *touches = [event touchesMatchingPhase:NSTouchPhaseTouching inView:self];
 	
     if (touches.count == 2 && lastTouches[0]) {
@@ -181,7 +185,6 @@ STQueue* eventqueue = [[STQueue alloc] init];
         NSTouch *touch;
 		
         touch = [array objectAtIndex:0];
-		
         if ([touch.identity isEqual:lastTouches[0].identity]) {
             currentTouches[0] = [touch copy];
         } else {
@@ -189,150 +192,100 @@ STQueue* eventqueue = [[STQueue alloc] init];
         }
 		
         touch = [array objectAtIndex:1];
-		
         if ([touch.identity isEqual:lastTouches[0].identity]) {
             currentTouches[0] = [touch copy];
         } else {
             currentTouches[1] = [touch copy];
         }
 		
-        /*if (!_tracking) {
-			// Not already tracking, store starting location
-            NSPoint dOrigin = [self deltaOrigin];
-            NSSize  dSize = [self deltaSize];
-            if (fabs(dOrigin.x) > _threshold ||
-                fabs(dOrigin.y) > _threshold ||
-                fabs(dSize.width) > _threshold ||
-                fabs(dSize.height) > _threshold) {
-                _tracking = YES;
-				// TODO here send message that move has begun
-				NSLog(@"Tracking begins");
-            }
-        } else {*/
-		if (_tracking) {
-			// Calculate difference since last call
-			// Produce event + queue
-			// Store new start position
-			//NSPoint dOrigin = [self deltaOrigin];
-            /*if (fabs(dOrigin.x) > _threshold ||
-                fabs(dOrigin.y) > _threshold ||
-                fabs(dSize.width) > _threshold ||
-                fabs(dSize.height) > _threshold) {
-                _tracking = YES;
-				// TODO here send message that move is ongoing
-				//NSLog(@"Tracking continues, dOrigin: (%f,%f), dSize: (%f,%f)", dOrigin.x, dOrigin.y, dSize.width, dSize.height);*/
-			
-			// Find change from last location
-            NSSize dSize = [self deltaSize];
-			// Add to total displacement
-			displacement.width += dSize.width;
-			displacement.height += dSize.height;
-			
-			// If this is above threshold for event, trigger
-			if (fabs(displacement.width) > threshold || fabs(displacement.height) > threshold) {
-				
-				int w = (int) displacement.width;
-				int h = (int) displacement.height;
-				
-				NSPoint fakePoint = NSMakePoint(w, h);
-				NSEvent* theEvent = [NSEvent otherEventWithType:NSApplicationDefined location:fakePoint modifierFlags:0 timestamp:0 windowNumber:[[self window] windowNumber] context:[[self window] graphicsContext] subtype:10 data1:0 data2:0];
-				[eventqueue enqueue:[theEvent copy]];
-				
-				displacement.width -= w;
-				displacement.height -= h;
-			}
-        } else {
-			// Start of new touch event
-			displacement = NSZeroSize;
-			_tracking = YES;
-			
-			NSEvent* theEvent = [NSEvent otherEventWithType:NSApplicationDefined location:NSZeroPoint modifierFlags:0 timestamp:0 windowNumber:[[self window] windowNumber] context:[[self window] graphicsContext] subtype:11 data1:0 data2:0];
-			[eventqueue enqueue:[theEvent copy]];
-		}
+		currentTime = [event timestamp];
 		
-		// Swap ready for next event
-        lastTouches[0] = currentTouches[0];
-        lastTouches[1] = currentTouches[1];
-    }
+		if (_tracking) {
+			NSSize deviceSize = currentTouches[0].deviceSize;
+
+			NSSize delta[2];
+			delta[0].width = currentTouches[0].normalizedPosition.x - lastTouches[0].normalizedPosition.x;
+			delta[1].width = currentTouches[1].normalizedPosition.x - lastTouches[1].normalizedPosition.x;
+			delta[0].height = currentTouches[0].normalizedPosition.y - lastTouches[0].normalizedPosition.y;
+			delta[1].height = currentTouches[1].normalizedPosition.y - lastTouches[1].normalizedPosition.y;
+			
+			// Add to total displacement
+			touchesDisplacementFromTouchOrigin[0].width += delta[0].width;
+			touchesDisplacementFromTouchOrigin[0].height += delta[0].height;
+			touchesDisplacementFromTouchOrigin[1].width += delta[1].width;
+			touchesDisplacementFromTouchOrigin[1].height += delta[1].height;
+			
+			int x0 = 0;
+			int y0 = 0;
+			int x1 = 0;
+			int y1 = 0;
+			
+			NSSize velocity[2];
+			velocity[0] = NSZeroSize;
+			velocity[1] = NSZeroSize;
+			
+			NSTimeInterval deltaTime = currentTime - lastTime;
+			
+			// Minimum velocity is 1
+			velocity[0].width = max(fabs(delta[0].width) / deltaTime, 1);
+			velocity[0].height = max(fabs(delta[0].height) / deltaTime, 1);
+			velocity[1].width = max(fabs(delta[1].width) / deltaTime, 1);
+			velocity[1].height = max(fabs(delta[1].height) / deltaTime, 1);
+
+			// Is either touch above threshold?
+			
+			// Scroll speed is related to:
+			//  device size (larger reduces overall)
+			//  velocity (faster increases speed)
+			//  displacement size
+			if (fabs(touchesDisplacementFromTouchOrigin[0].width) > threshold) {
+				x0 = (int) (touchesDisplacementFromTouchOrigin[0].width / step);
+				touchesDisplacementFromTouchOrigin[0].width -= x0 * step;
+			}
+			if (fabs(touchesDisplacementFromTouchOrigin[0].height) > threshold) {
+				y0 = (int) (touchesDisplacementFromTouchOrigin[0].height / step);
+				touchesDisplacementFromTouchOrigin[0].height -= y0 * step;
+			}
+			if (fabs(touchesDisplacementFromTouchOrigin[1].width) > threshold) {
+				x1 = (int) (touchesDisplacementFromTouchOrigin[1].width / step);
+				touchesDisplacementFromTouchOrigin[1].width -= x1 * step;
+			}
+			if (fabs(touchesDisplacementFromTouchOrigin[1].height) > threshold) {
+				y1 = (int) (touchesDisplacementFromTouchOrigin[1].height / step);
+				touchesDisplacementFromTouchOrigin[1].height -= y1 * step;
+			}
+			
+			int xsteps = (int) ((x0 + x1) * (velocity[0].width + velocity[1].width));
+			int ysteps = (int) ((y0 + y1) * (velocity[0].height + velocity[1].height));
+			
+			if (xsteps != 0 || ysteps != 0) {
+				NSLog(@"vx0: %f, vy0: %f, vx1: %f, vy1: %f - xsteps: %d, ysteps: %d", velocity[0].width, velocity[0].height, velocity[1].width, velocity[1].height, xsteps, ysteps);
+			}
+			
+			if (xsteps > 0) {
+				NSEvent* theEvent = [NSEvent otherEventWithType:NSApplicationDefined location:NSZeroPoint modifierFlags:0 timestamp:0 windowNumber:[[self window] windowNumber] context:[[self window] graphicsContext] subtype:SIM_TOUCH_SCROLL_RIGHT data1:abs(xsteps) data2:0];
+				[eventqueue enqueue:[theEvent copy]];
+			} else if (xsteps < 0) {
+				NSEvent* theEvent = [NSEvent otherEventWithType:NSApplicationDefined location:NSZeroPoint modifierFlags:0 timestamp:0 windowNumber:[[self window] windowNumber] context:[[self window] graphicsContext] subtype:SIM_TOUCH_SCROLL_LEFT data1:abs(xsteps) data2:0];
+				[eventqueue enqueue:[theEvent copy]];
+			}
+			
+			if (ysteps > 0) {
+				NSEvent* theEvent = [NSEvent otherEventWithType:NSApplicationDefined location:NSZeroPoint modifierFlags:0 timestamp:0 windowNumber:[[self window] windowNumber] context:[[self window] graphicsContext] subtype:SIM_TOUCH_SCROLL_UP data1:abs(ysteps) data2:0];
+				[eventqueue enqueue:[theEvent copy]];
+			} else if (ysteps < 0) {
+				NSEvent* theEvent = [NSEvent otherEventWithType:NSApplicationDefined location:NSZeroPoint modifierFlags:0 timestamp:0 windowNumber:[[self window] windowNumber] context:[[self window] graphicsContext] subtype:SIM_TOUCH_SCROLL_DOWN data1:abs(ysteps) data2:0];
+				[eventqueue enqueue:[theEvent copy]];
+			}
+			
+			// Swap ready for next event
+			lastTouches[0] = currentTouches[0];
+			lastTouches[1] = currentTouches[1];
+			lastTime = currentTime;
+		}
+	}
 }
 
-
-- (NSPoint)deltaOrigin {
-    if (!(lastTouches[0] && lastTouches[1] &&
-		  currentTouches[0] && currentTouches[1])) return NSZeroPoint;
-	
-    CGFloat x1 = MIN(lastTouches[0].normalizedPosition.x, lastTouches[1].normalizedPosition.x);
-    CGFloat x2 = MAX(currentTouches[0].normalizedPosition.x, currentTouches[1].normalizedPosition.x);
-    CGFloat y1 = MIN(lastTouches[0].normalizedPosition.y, lastTouches[1].normalizedPosition.y);
-    CGFloat y2 = MAX(currentTouches[0].normalizedPosition.y, currentTouches[1].normalizedPosition.y);
-	
-    NSSize deviceSize = lastTouches[0].deviceSize;
-    NSPoint delta;
-    delta.x = (x2 - x1) * deviceSize.width;
-    delta.y = (y2 - y1) * deviceSize.height;
-	//NSLog(@"deviceSize, w: %f, h: %f", deviceSize.width, deviceSize.height);
-    return delta;
-}
-
-
-
-/*
- 
- Store initial position, interrupt if needed
- 
- Movement from last position as displacement
- Move by proportion to maximum extent?
- 
- Two touch points, each has x and y displacement
- Sum of x and y displacement gives total
- 
- */
-
-
-
-// It's this code which doesn't work!!!
-// Need a better way to measure scroll displacement
-- (NSSize)deltaSize {
-    if (!(lastTouches[0] && lastTouches[1] && currentTouches[0] && currentTouches[1])) return NSZeroSize;
-	
-	NSSize delta;
-	NSSize deviceSize = lastTouches[0].deviceSize;
-	
-	CGFloat x0 = currentTouches[0].normalizedPosition.x - lastTouches[0].normalizedPosition.x;
-	CGFloat x1 = currentTouches[1].normalizedPosition.x - lastTouches[1].normalizedPosition.x;
-	
-	CGFloat y0 = currentTouches[0].normalizedPosition.y - lastTouches[0].normalizedPosition.y;
-	CGFloat y1 = currentTouches[1].normalizedPosition.y - lastTouches[1].normalizedPosition.y;
-
-	delta.width = (x0 + x1) * deviceSize.width;
-	delta.height = (y0 + y1) * deviceSize.height * -1;
-	
-	return delta;
-	
-	
-    /*CGFloat x1,x2,y1,y2,width1,width2,height1,height2;
-    x1 = MIN(lastTouches[0].normalizedPosition.x, lastTouches[1].normalizedPosition.x);
-    x2 = MAX(lastTouches[0].normalizedPosition.x, lastTouches[1].normalizedPosition.x);
-    width1 = x2 - x1;
-	
-    y1 = MIN(lastTouches[0].normalizedPosition.y, lastTouches[1].normalizedPosition.y);
-    y2 = MAX(lastTouches[0].normalizedPosition.y, lastTouches[1].normalizedPosition.y);
-    height1 = y2 - y1;
-	
-    x1 = MIN(currentTouches[0].normalizedPosition.x, currentTouches[1].normalizedPosition.x);
-    x2 = MAX(currentTouches[0].normalizedPosition.x, currentTouches[1].normalizedPosition.x);
-    width2 = x2 - x1;
-	
-    y1 = MIN(currentTouches[0].normalizedPosition.y, currentTouches[1].normalizedPosition.y);
-    y2 = MAX(currentTouches[0].normalizedPosition.y, currentTouches[1].normalizedPosition.y);
-    height2 = y2 - y1;
-	
-    NSSize deviceSize = lastTouches[0].deviceSize;
-    NSSize delta;
-    delta.width = (width2 - width1) * deviceSize.width;
-    delta.height = (height2 - height1) * deviceSize.height;
-    return delta;*/
-}
 
 /*- (void)dealloc
 {
@@ -408,8 +361,8 @@ STQueue* eventqueue = [[STQueue alloc] init];
 	// Touch stuff
 	[self setAcceptsTouchEvents:YES];
 	_tracking = NO;
-	threshold = 1;
-	lastpoint = NSZeroPoint;
+	threshold = 0.05;
+	step = 0.01;
 	
     theGameView = self;
     screenbuf_lock = [[NSConditionLock alloc] initWithCondition:0];
@@ -436,9 +389,12 @@ STQueue* eventqueue = [[STQueue alloc] init];
 		
 	// Location of pakset
 	// Generate from sandbox location + pakset base name
-	[argvs addObject:[NSString stringWithString:@"-objects"]];
-	[argvs addObject:[NSString stringWithString:@"pak/"]];
-	
+	//[argvs addObject:@"-objects"];
+	//[argvs addObject:@"pak/"];
+
+	[argvs addObject:@"-debug"];
+	[argvs addObject:@"3"];
+
 	int g_argc = [argvs count];
 	char* g_argv[32];
 	

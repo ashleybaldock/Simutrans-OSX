@@ -328,8 +328,7 @@ static void internal_GetEvents(bool wait)
             
         case NSKeyDown:
         {
-            
-            unsigned long code;
+            unsigned long code = 0;
 
             NSString *codechars = [evt charactersIgnoringModifiers];
             NSString *codecharsCS = [evt characters];
@@ -428,45 +427,38 @@ static void internal_GetEvents(bool wait)
                     sys_event.code = SIM_SYSTEM_QUIT;
                     break;
                 }
-				case 10:
+				case SIM_TOUCH_SCROLL_UP:
 				{
 					sys_event.type = SIM_TOUCH;
-					sys_event.code = SIM_TOUCH_SCROLL;
-					NSPoint event_location = [evt locationInWindow];
-					NSSize displacement = NSMakeSize(event_location.x, event_location.y);
-					//NSPoint local_point = [theGameView convertPoint:event_location fromView:nil];
-					NSLog(@"Last pos: (%f,%f)", last_mouse_pos.x, last_mouse_pos.y);
-					sys_event.mx      = displacement.width;
-					sys_event.my      = displacement.height;
-					//sys_event.mx      = 0; // -ve left, +ve right
-					//sys_event.my      = 10; // -ve up, +ve down
-					NSLog(@"Custom touch event, (%f,%f), (%d,%d)", event_location.x, event_location.y, sys_event.mx, sys_event.my);
-					//last_mouse_pos = NSMakePoint(last_mouse_pos.x + displacement.width, last_mouse_pos.y + (-1 * displacement.height));
+					sys_event.code = SIM_TOUCH_SCROLL_UP;
+					sys_event.magnitude = evt.data1;
+					NSLog(@"SIM_TOUCH_SCROLL_UP event (%ld)", evt.data1);
 					break;
 				}
-				case 11:
+				case SIM_TOUCH_SCROLL_DOWN:
 				{
-					sys_event.type = SIM_TOUCH_BEGIN;
-					sys_event.code = SIM_TOUCH_SCROLL;
-					NSPoint event_location = [evt locationInWindow];
-					//NSPoint local_point = [theGameView convertPoint:event_location fromView:nil];
-					sys_event.mx      = last_mouse_pos.x;
-					sys_event.my      = last_mouse_pos.y;
-					NSLog(@"Custom touch event (begin), (%f,%f), last: (%f,%f)", event_location.x, event_location.y, last_mouse_pos.x, last_mouse_pos.y);
+					sys_event.type = SIM_TOUCH;
+					sys_event.code = SIM_TOUCH_SCROLL_DOWN;
+					sys_event.magnitude = evt.data1;
+					NSLog(@"SIM_TOUCH_SCROLL_DOWN event (%ld)", evt.data1);
 					break;
 				}
-				case 12:
+				case SIM_TOUCH_SCROLL_LEFT:
 				{
-					sys_event.type = SIM_TOUCH_END;
-					sys_event.code = SIM_TOUCH_SCROLL;
-					NSPoint event_location = [evt locationInWindow];
-					//NSPoint local_point = [theGameView convertPoint:event_location fromView:nil];
-					sys_event.mx      = last_mouse_pos.x;
-					sys_event.my      = last_mouse_pos.y;
-					NSLog(@"Custom touch event (end), (%f,%f), last: (%f,%f)", event_location.x, event_location.y, last_mouse_pos.x, last_mouse_pos.y);
+					sys_event.type = SIM_TOUCH;
+					sys_event.code = SIM_TOUCH_SCROLL_LEFT;
+					sys_event.magnitude = evt.data1;
+					NSLog(@"SIM_TOUCH_SCROLL_LEFT event (%ld)", evt.data1);
 					break;
 				}
-
+				case SIM_TOUCH_SCROLL_RIGHT:
+				{
+					sys_event.type = SIM_TOUCH;
+					sys_event.code = SIM_TOUCH_SCROLL_RIGHT;
+					sys_event.magnitude = evt.data1;
+					NSLog(@"SIM_TOUCH_SCROLL_RIGHT event (%ld)", evt.data1);
+					break;
+				}
             }
             break;
         }
