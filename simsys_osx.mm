@@ -37,11 +37,13 @@ void dr_mkdir(char const* const path)
  */
 char const* dr_query_homedir()
 {
+	NSLog(@"dr_query_homedir()");
 	static char buffer[PATH_MAX];
 	
 	// For sandbox support
 	// sprintf(buffer, "%s/Library/Containers/org.simutrans.simutrans/Data/Library/Application Support", getenv("HOME"));
 	sprintf(buffer, "%s/Library/Application Support/Simutrans", [NSHomeDirectory() UTF8String]);
+	dr_mkdir(buffer);
 	
 	NSLog(@"%s", buffer);
 	
