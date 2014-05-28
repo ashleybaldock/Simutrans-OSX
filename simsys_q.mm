@@ -427,14 +427,6 @@ static void internal_GetEvents(bool wait)
                     sys_event.code = SIM_SYSTEM_QUIT;
                     break;
                 }
-				case SIM_TOUCH_SCROLL:
-				{
-					sys_event.type = SIM_TOUCH;
-					sys_event.code = SIM_TOUCH_SCROLL;
-					sys_event.mx = evt.data1;
-					sys_event.my = evt.data2;
-					break;
-				}
             }
             break;
         }
@@ -464,14 +456,6 @@ static void internal_GetEvents(bool wait)
 			break;
         }
 
-        /* Multi-touch gestures */
-        //case NSEventTypeMagnify:
-            // Zoom in/out
-        //case NSEventTypeRotate:
-            // Rotate the map
-        //case NSEventTypeSwipe:
-            // Three-finger swipe/scroll for moving around the map?
-        
         default: {
             sys_event.type = SIM_IGNORE_EVENT;
 			sys_event.code = 0;
@@ -530,7 +514,7 @@ void set_pointer(int)
 
 static timeval first;
 
-unsigned long dr_time(void)
+uint32 dr_time(void)
 {
 	timeval second;
 	gettimeofday(&second,NULL);
@@ -539,7 +523,7 @@ unsigned long dr_time(void)
 		second.tv_usec += 1000000;
 		second.tv_sec--;
 	}
-	return (unsigned long)(second.tv_sec - first.tv_sec)*1000ul + (unsigned long)(unsigned long)(second.tv_usec - first.tv_usec)/1000ul;
+	return (uint32)(second.tv_sec - first.tv_sec)*1000ul + (uint32)(uint32)(second.tv_usec - first.tv_usec)/1000ul;
 }
 
 /*
@@ -614,7 +598,6 @@ int main (int argc, char** argv)
 {
     gettimeofday(&first, NULL);
 
-    // Start up Cocoa application
     return NSApplicationMain(argc, (const char**)argv);
 }
 

@@ -84,7 +84,6 @@ char const* dr_query_objdir()
 	return buffer;
 }
 
-
 /*
  * This retrieves the 2 byte string for the default language
  */
@@ -99,21 +98,17 @@ const char *dr_get_locale_string()
 		code[i] = tolower(ptr[i]);
 		code[i+1] = 0;
 	}
-	setlocale( LC_ALL, "C" );	// or the numberourpur may be broken
+	setlocale( LC_ALL, "C" );
 	return code[0] ? code : NULL;
 }
 
-
-
 void dr_fatal_notify(char const* const msg)
 {
-	// TODO - show message box in app
 	fputs(msg, stderr);
 }
 
 bool dr_download_pakset( const char *, bool )
 {
-	// On OSX a pre-game launcher window takes care of pakset downloading
 	return false;
 }
 
