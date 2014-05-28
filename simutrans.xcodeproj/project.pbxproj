@@ -2096,6 +2096,7 @@
 				1CF0FC0B1498193800347616 /* Frameworks */,
 				1CF0FC0C1498193800347616 /* Resources */,
 				1CE05A44150C1D09002169A7 /* ShellScript */,
+				1C193C8B19368B2900E75B98 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -2152,6 +2153,19 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		1C193C8B19368B2900E75B98 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Create DMG\nif [ \"$CONFIGURATION\" != \"Release\" ]\nthen\n\texit 0\nfi\n\n# Size in k (TODO: read size of .dmg and use this)\nsize=102400\nsource=$PROJECT_DIR/../Build/$CONFIGURATION/app/            # TODO: Version number\ntitle=Simutrans\napplicationName=$PRODUCT_NAME.app\nfinalDMGPath=$PROJECT_DIR/../Build/$CONFIGURATION/\nfinalDMGName=$PRODUCT_NAME.dmg                              # TODO: Version number\n\nhdiutil create -srcfolder ${source} -volname \"${title}\" -fs HFS+ \\\n-fsargs \"-c c=64,a=16,e=16\" -format UDRW -size ${size}k pack.temp.dmg\n\ndevice=$(hdiutil attach -readwrite -noverify -noautoopen \"pack.temp.dmg\" | \\\negrep '^/dev/' | sed 1q | awk '{print $1}')\n\nln -s /Applications /Volumes/${title}/.\n\nbless --folder /Volumes/${title} --openfolder /Volumes/${title}\n\necho '\ntell application \"Finder\"\ntell disk \"'${title}'\"\nopen\ntell container window\nset current view to icon view\nset toolbar visible to false\nset statusbar visible to false\nset the bounds to {400, 100, 750, 300}\nset statusbar visible to false\nend tell\n\nset opts to the icon view options of container window\ntell opts\nset icon size to 128\nset arrangement to not arranged\nset text size to 14\nend tell\n\n# 128px wide for icon, 400px wide total, 144px padding, split into 4 is 36px, 72px, 36px\n# Height just set a reasonable offset from top, say 36px\nset position of item \"'${applicationName}'\" to {48, 36}\n# 36 + 128 + 72 = 236\nset position of item \"Applications\" to {224, 36}\n\nupdate without registering applications\ndelay 5\n\nclose\nopen\nend tell\nend tell\n' | osascript\n\nchmod -Rf go-w /Volumes/\"${title}\"\nsync\nhdiutil detach ${device}\nrm \"${finalDMGPath}${finalDMGName}\"\nhdiutil convert \"./pack.temp.dmg\" -format UDZO -imagekey zlib-level=9 -o \"${finalDMGPath}${finalDMGName}\"\nrm -f ./pack.temp.dmg\n\n";
+		};
 		1CD10842151BDCB300BFC1E4 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -2163,7 +2177,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "REV=`svnversion -n`\necho \"#ifndef REVISION\"      >  ${PROJECT_DIR}/revision.h\necho \"#define REVISION $REV\" >> ${PROJECT_DIR}/revision.h\necho \"#endif\"                >> ${PROJECT_DIR}/revision.h\n\n\n\n";
+			shellScript = "REV=`svnversion -n`\nFILE_REV=NONE\n\n# Avoid recreating this file unless needed for quicker compiles\nif [ -f ${PROJECT_DIR}/revision.h ]\nthen\n\tFILE_REV=`awk < revision.h 'NR==2 { print $3 }'`\nfi\n\nif [ \"$REV\" != \"$FILE_REV\" ]\nthen\n\techo \"#ifndef REVISION\"      >  ${PROJECT_DIR}/revision.h\n\techo \"#define REVISION $REV\" >> ${PROJECT_DIR}/revision.h\n\techo \"#endif\"                >> ${PROJECT_DIR}/revision.h\nfi\n\n\n\n\n\n\n\n\n\n\n\n";
 		};
 		1CE05A44150C1D09002169A7 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -2176,7 +2190,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Copy base Simutrans files\nrsync -rC $PROJECT_DIR/simutrans/ $BUILT_PRODUCTS_DIR/$PRODUCT_NAME.app/Contents/MacOS/\n\n# Copy base pakset files\n# Note that this isn't loaded by the game, but comes from <user>/Library/Containers/org.simutrans.simutrans/Data/Library/\nrsync -rC $PROJECT_DIR/pak/ $BUILT_PRODUCTS_DIR/$PRODUCT_NAME.app/Contents/MacOS/pak/\n\n\nmkdir -p $PROJECT_DIR/../Build/$CONFIGURATION/app/\nif [ -d $PROJECT_DIR/../Build/$CONFIGURATION/app/$PRODUCT_NAME.app ]; then\n\trm -r $PROJECT_DIR/../Build/$CONFIGURATION/app/$PRODUCT_NAME.app\nfi\ncp -R $BUILT_PRODUCTS_DIR/$PRODUCT_NAME.app $PROJECT_DIR/../Build/$CONFIGURATION/app/\n\nexit 0\n\n\n# Create DMG\n\n# Size in k (TODO: read size of .dmg and use this)\nsize=102400\nsource=$PROJECT_DIR/../Build/$CONFIGURATION/app/            # TODO: Version number\ntitle=Simutrans\napplicationName=$PRODUCT_NAME.app\nfinalDMGPath=$PROJECT_DIR/../Build/$CONFIGURATION/\nfinalDMGName=$PRODUCT_NAME.dmg                              # TODO: Version number\n\nhdiutil create -srcfolder ${source} -volname \"${title}\" -fs HFS+ \\\n-fsargs \"-c c=64,a=16,e=16\" -format UDRW -size ${size}k pack.temp.dmg\n\ndevice=$(hdiutil attach -readwrite -noverify -noautoopen \"pack.temp.dmg\" | \\\negrep '^/dev/' | sed 1q | awk '{print $1}')\n\nln -s /Applications /Volumes/${title}/.\n\nbless --folder /Volumes/${title} --openfolder /Volumes/${title}\n\necho '\n\ttell application \"Finder\"\n\t\ttell disk \"'${title}'\"\n\t\t\topen\n\t\t\ttell container window\n\t\t\t\tset current view to icon view\n\t\t\t\tset toolbar visible to false\n\t\t\t\tset statusbar visible to false\n\t\t\t\tset the bounds to {400, 100, 750, 300}\n\t\t\t\tset statusbar visible to false\n\t\t\tend tell\n\n\t\t\tset opts to the icon view options of container window\n\t\t\ttell opts\n\t\t\t\tset icon size to 128\n\t\t\t\tset arrangement to not arranged\n\t\t\t\tset text size to 14\n\t\t\tend tell\n\n\t\t\t# 128px wide for icon, 400px wide total, 144px padding, split into 4 is 36px, 72px, 36px\n\t\t\t# Height just set a reasonable offset from top, say 36px\n\t\t\tset position of item \"'${applicationName}'\" to {48, 36}\n\t\t\t# 36 + 128 + 72 = 236\n\t\t\tset position of item \"Applications\" to {224, 36}\n\n\t\t\tupdate without registering applications\n\t\t\tdelay 5\n\n\t\t\tclose\n\t\t\topen\n\t\tend tell\n\tend tell\n' | osascript\n\nchmod -Rf go-w /Volumes/\"${title}\"\nsync\nhdiutil detach ${device}\nrm \"${finalDMGPath}${finalDMGName}\"\nhdiutil convert \"./pack.temp.dmg\" -format UDZO -imagekey zlib-level=9 -o \"${finalDMGPath}${finalDMGName}\"\nrm -f ./pack.temp.dmg\n\n\n\n\n\n\n";
+			shellScript = "# Copy base Simutrans files\nrsync -rC $PROJECT_DIR/simutrans/ $BUILT_PRODUCTS_DIR/$PRODUCT_NAME.app/Contents/MacOS/\n\n# Copy base pakset files\n# Note that this isn't loaded by the game, but comes from <user>/Library/Containers/org.simutrans.simutrans/Data/Library/\nrsync -rC $PROJECT_DIR/pak/ $BUILT_PRODUCTS_DIR/$PRODUCT_NAME.app/Contents/MacOS/pak/\n\n\nmkdir -p $PROJECT_DIR/../Build/$CONFIGURATION/app/\nif [ -d $PROJECT_DIR/../Build/$CONFIGURATION/app/$PRODUCT_NAME.app ]; then\n\trm -r $PROJECT_DIR/../Build/$CONFIGURATION/app/$PRODUCT_NAME.app\nfi\ncp -R $BUILT_PRODUCTS_DIR/$PRODUCT_NAME.app $PROJECT_DIR/../Build/$CONFIGURATION/app/\n\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
