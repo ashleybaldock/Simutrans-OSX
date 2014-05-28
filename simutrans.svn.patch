@@ -1,354 +1,23 @@
 Index: .gitignore
 ===================================================================
---- .gitignore	(revision 7138)
+--- .gitignore	(revision 7175)
 +++ .gitignore	(working copy)
 @@ -27,3 +27,4 @@
  *.patch
  *.log
  /doxygen
 +*
-Index: gui/components/gui_combobox.cc
-===================================================================
---- gui/components/gui_combobox.cc	(revision 7138)
-+++ gui/components/gui_combobox.cc	(working copy)
-@@ -79,7 +79,8 @@
- 			return true;
- 		}
- 	}
--	else if(  IS_WHEELUP(ev)  ||  IS_WHEELDOWN(ev)  ) {
-+	else if(  IS_WHEELUP(ev)  ||  IS_WHEELDOWN(ev)  ||  IS_TOUCHSCROLL(ev)) {
-+		printf("gui_combobox - IS_TOUCHSCROLL 1");
- 		// scroll the list
- 		droplist.infowin_event(ev);
- 		return true;
-@@ -128,7 +129,8 @@
- 			event_t ev2 = *ev;
- 			translate_event(&ev2, 0, -D_EDIT_HEIGHT - D_V_SPACE / 2);
- 
--			if(droplist.getroffen(ev->cx + pos.x, ev->cy + pos.y)  ||  IS_WHEELUP(ev)  ||  IS_WHEELDOWN(ev)) {
-+			if(droplist.getroffen(ev->cx + pos.x, ev->cy + pos.y)  ||  IS_WHEELUP(ev)  ||  IS_WHEELDOWN(ev)  ||  IS_TOUCHSCROLL(ev)) {
-+				printf("gui_combobox - IS_TOUCHSCROLL 2");
- 				droplist.infowin_event(&ev2);
- 				// we selected something?
- 				if(finish  &&  IS_LEFTRELEASE(ev)) {
-Index: gui/components/gui_numberinput.cc
-===================================================================
---- gui/components/gui_numberinput.cc	(revision 7138)
-+++ gui/components/gui_numberinput.cc	(working copy)
-@@ -243,10 +243,12 @@
- 		sint32 new_value = value;
- 
- 		// mouse wheel -> fast increase / decrease
--		if(IS_WHEELUP(ev)){
-+		if (  IS_WHEELUP(ev)  ||  IS_TOUCHSCROLL_RIGHT(ev)  ||  IS_TOUCHSCROLL_UP(ev)  ) {
-+			printf("gui_numberinput - IS_TOUCHSCROLL next");
- 			new_value = get_next_value();
- 		}
--		else if(IS_WHEELDOWN(ev)){
-+		else if (  IS_WHEELDOWN(ev)  ||  IS_TOUCHSCROLL_LEFT(ev)  ||  IS_TOUCHSCROLL_DOWN(ev)  ) {
-+			printf("gui_numberinput - IS_TOUCHSCROLL prev");
- 			new_value = get_prev_value();
- 		}
- 
-Index: gui/components/gui_scrollbar.cc
-===================================================================
---- gui/components/gui_scrollbar.cc	(revision 7138)
-+++ gui/components/gui_scrollbar.cc	(working copy)
-@@ -141,6 +141,23 @@
- 	else if (IS_WHEELDOWN(ev) && (type == vertical) != IS_SHIFT_PRESSED(ev)) {
- 		scroll( +knob_scroll_amount );
- 	}
-+	else if (  IS_TOUCHSCROLL(ev)  ) {
-+		printf("gui_scrollbar - IS_TOUCHSCROLL");
-+		if (  type == vertical  ) {
-+			if (  IS_TOUCHSCROLL_UP(ev)  ) {
-+				// TODO loop through magnitude?
-+				scroll( -knob_scroll_amount );
-+			} else if (  IS_TOUCHSCROLL_DOWN(ev)  ) {
-+				scroll( +knob_scroll_amount );
-+			}
-+		} else {
-+			if (  IS_TOUCHSCROLL_LEFT(ev)  ) {
-+				scroll( -knob_scroll_amount );
-+			} else if (  IS_TOUCHSCROLL_RIGHT(ev)  ) {
-+				scroll( +knob_scroll_amount );
-+			}
-+		}
-+	}
- 	else if(  is_visible()  &&  !full ) {
- 		// don't respond to these messages if not visible
- 		if(  IS_LEFTCLICK(ev)  ||  IS_LEFTREPEAT(ev)  ) {
-Index: gui/components/gui_scrolled_list.cc
-===================================================================
---- gui/components/gui_scrolled_list.cc	(revision 7138)
-+++ gui/components/gui_scrolled_list.cc	(working copy)
-@@ -247,7 +247,7 @@
- 		return true;
- 	}
- 
--	if(  sb.is_visible()  &&  (sb.getroffen(x, y)  ||  IS_WHEELUP(ev)  ||  IS_WHEELDOWN(ev))  ) {
-+	if(  sb.is_visible()  &&  (sb.getroffen(x, y)  ||  IS_WHEELUP(ev)  ||  IS_WHEELDOWN(ev)  ||  IS_WHEELDOWN(ev)  ||  IS_TOUCHSCROLL(ev))  ) {
- 		event_t ev2 = *ev;
- 		translate_event(&ev2, -sb.get_pos().x, -sb.get_pos().y);
- 		return sb.infowin_event(&ev2);
-Index: gui/components/gui_scrollpane.cc
-===================================================================
---- gui/components/gui_scrollpane.cc	(revision 7138)
-+++ gui/components/gui_scrollpane.cc	(working copy)
-@@ -105,7 +105,7 @@
- 		translate_event(&ev2, -scroll_x.get_pos().x, -scroll_x.get_pos().y);
- 		return scroll_x.infowin_event(&ev2);
- 	}
--	else if((IS_WHEELUP(ev)  ||  IS_WHEELDOWN(ev))  &&  (((b_show_scroll_y  &&  scroll_y.is_visible())  &&  !IS_SHIFT_PRESSED(ev))  ||  ((b_show_scroll_x  &&  scroll_x.is_visible())  &&  IS_SHIFT_PRESSED(ev)))) {
-+	else if((IS_WHEELUP(ev)  ||  IS_WHEELDOWN(ev)  ||  IS_TOUCHSCROLL(ev))  &&  (((b_show_scroll_y  &&  scroll_y.is_visible())  &&  !IS_SHIFT_PRESSED(ev))  ||  ((b_show_scroll_x  &&  scroll_x.is_visible())  &&  IS_SHIFT_PRESSED(ev)))) {
- 		// otherwise these events are only registered where directly over the scroll region
- 		// (and sometime even not then ... )
- 		return IS_SHIFT_PRESSED(ev) ? scroll_x.infowin_event(ev) : scroll_y.infowin_event(ev);
-Index: gui/convoi_frame.cc
-===================================================================
---- gui/convoi_frame.cc	(revision 7138)
-+++ gui/convoi_frame.cc	(working copy)
-@@ -264,7 +264,8 @@
- 	if(ev->ev_class == INFOWIN  &&  ev->ev_code == WIN_CLOSE) {
- 		destroy_win( magic_convoi_list_filter+owner->get_player_nr() );
- 	}
--	else if(IS_WHEELUP(ev)  ||  IS_WHEELDOWN(ev)) {
-+	else if(IS_WHEELUP(ev)  ||  IS_WHEELDOWN(ev)  ||  IS_TOUCHSCROLL(ev)) {
-+		printf("gui_convoi_frame - IS_TOUCHSCROLL");
- 		// otherwise these events are only registered where directly over the scroll region
- 		// (and sometime even not then ... )
- 		return vscroll.infowin_event(ev);
-Index: gui/halt_list_frame.cc
-===================================================================
---- gui/halt_list_frame.cc	(revision 7138)
-+++ gui/halt_list_frame.cc	(working copy)
-@@ -348,7 +348,8 @@
- 			filter_frame->infowin_event(ev);
- 		}
- 	}
--	else if(IS_WHEELUP(ev)  ||  IS_WHEELDOWN(ev)) {
-+	else if(IS_WHEELUP(ev)  ||  IS_WHEELDOWN(ev)  ||  IS_TOUCHSCROLL(ev)) {
-+		printf("gui_halt_list_frame - IS_TOUCHSCROLL");
- 		// otherwise these events are only registered where directly over the scroll region
- 		// (and sometime even not then ... )
- 		return vscroll.infowin_event(ev);
-Index: gui/pakselector.cc
-===================================================================
---- gui/pakselector.cc	(revision 7138)
-+++ gui/pakselector.cc	(working copy)
-@@ -143,7 +143,7 @@
- 		y += D_BUTTON_HEIGHT+D_FOCUS_OFFSET_V;
- 	}
- 	action_button_width += (D_H_SPACE<<1);
--	chdir( env_t::program_dir );
-+	chdir( dr_query_objdir() );
- 
- 	if(entries.get_count() > this->num_sections+1) {
- 		// empty path as more than one pakset is present, user has to choose
-Index: gui/settings_frame.cc
-===================================================================
---- gui/settings_frame.cc	(revision 7138)
-+++ gui/settings_frame.cc	(working copy)
-@@ -98,7 +98,7 @@
- 			sets->parse_simuconf( simuconf, dummy16, dummy16, dummy16, dummy_str );
- 		}
- 		stadt_t::cityrules_init(env_t::objfilename);
--		chdir( env_t::program_dir );
-+		chdir( dr_query_objdir() );
- 		chdir( env_t::objfilename.c_str() );
- 		if(simuconf.open("config/simuconf.tab")) {
- 			sint16 dummy16;
 Index: revision.h
 ===================================================================
 --- revision.h	(revision 0)
 +++ revision.h	(working copy)
 @@ -0,0 +1,3 @@
 +#ifndef REVISION
-+#define REVISION 7138M
++#define REVISION 7175M
 +#endif
-Index: simevent.cc
-===================================================================
---- simevent.cc	(revision 7138)
-+++ simevent.cc	(working copy)
-@@ -152,6 +152,44 @@
- 			ev->ev_class = EVENT_SYSTEM;
- 			ev->ev_code  = sys_event.code;
- 			break;
-+		
-+		// Touch sequences
-+		// Code denotes number of touches
-+		// Begin denotes the start of a touch (drag) sequence
-+			
-+			
-+		// Starting location of touch sequence is wherever the mouse cursor happens to be
-+		// each move event is an offset relative to the last cursor position
-+		// (which is updated each time by the amount of the offset)
-+			
-+		// Map raw touch events into useful ones for the game to consume
-+		// Scrolling - translates to up/down/left/right in units
-+		//  To scroll quicker, send more events/larger offsets
-+
-+		// Ongoing events (similar to mouse movement)
-+			
-+		// Touch events
-+		// These have a magnitude value, which determines how large the effect is
-+		case SIM_TOUCH:
-+			ev->ev_class = EVENT_TOUCH;
-+			ev->magnitude = sys_event.magnitude;
-+			switch (sys_event.code) {
-+				case SIM_TOUCH_SCROLL_UP:
-+					ev->ev_code = TOUCH_SCROLL_UP;
-+					break;
-+				case SIM_TOUCH_SCROLL_DOWN:
-+					ev->ev_code = TOUCH_SCROLL_DOWN;
-+					break;
-+				case SIM_TOUCH_SCROLL_LEFT:
-+					ev->ev_code = TOUCH_SCROLL_LEFT;
-+					break;
-+				case SIM_TOUCH_SCROLL_RIGHT:
-+					ev->ev_code = TOUCH_SCROLL_RIGHT;
-+					break;
-+				default:
-+					break;
-+			}
-+			break;
- 	}
- 
- 	// Knightly : check for double-clicks and triple-clicks
-Index: simevent.h
-===================================================================
---- simevent.h	(revision 7138)
-+++ simevent.h	(working copy)
-@@ -30,6 +30,8 @@
- #define WINDOW_MAKE_MIN_SIZE         11  // 11-mar-03	(Mathew Hounsell) Added
- #define WINDOW_CHOOSE_NEXT           12	 // @author Volker Meyer @date  11.06.2003
- 
-+#define EVENT_TOUCH                  20
-+
- #define EVENT_SYSTEM                254
- #define IGNORE_EVENT                255
- 
-@@ -53,6 +55,16 @@
- #define SYSTEM_RESIZE                 2
- #define SYSTEM_RELOAD_WINDOWS         3
- 
-+/* Touch/Gesture Event Codes */
-+#define TOUCH_SCROLL_UP               1  // 
-+#define TOUCH_SCROLL_DOWN             2  // 
-+#define TOUCH_SCROLL_LEFT             3  // 
-+#define TOUCH_SCROLL_RIGHT            4  // 
-+#define TOUCH_ZOOM_IN                10  // 
-+#define TOUCH_ZOOM_OUT               11  // 
-+#define TOUCH_ROTATE_LEFT            20  // 
-+#define TOUCH_ROTATE_RIGHT           21  // 
-+
- /* normal keys have range 0-255, special key follow above 255 */
- /* other would be better for true unicode support :( */
- 
-@@ -116,6 +128,13 @@
- #define IS_WHEELUP(ev) ((ev)->ev_class == EVENT_CLICK && (ev)->ev_code == MOUSE_WHEELUP)
- #define IS_WHEELDOWN(ev) ((ev)->ev_class == EVENT_CLICK && (ev)->ev_code == MOUSE_WHEELDOWN)
- 
-+#define IS_TOUCHSCROLL(ev) ((ev)->ev_class == EVENT_TOUCH && ((ev)->ev_code == TOUCH_SCROLL_UP || (ev)->ev_code == TOUCH_SCROLL_DOWN || (ev)->ev_code == TOUCH_SCROLL_LEFT || (ev)->ev_code == TOUCH_SCROLL_RIGHT))
-+#define IS_TOUCHSCROLL_UP(ev) ((ev)->ev_class == EVENT_TOUCH && (ev)->ev_code == TOUCH_SCROLL_UP)
-+#define IS_TOUCHSCROLL_DOWN(ev) ((ev)->ev_class == EVENT_TOUCH && (ev)->ev_code == TOUCH_SCROLL_DOWN)
-+#define IS_TOUCHSCROLL_LEFT(ev) ((ev)->ev_class == EVENT_TOUCH && (ev)->ev_code == TOUCH_SCROLL_LEFT)
-+#define IS_TOUCHSCROLL_RIGHT(ev) ((ev)->ev_class == EVENT_TOUCH && (ev)->ev_code == TOUCH_SCROLL_RIGHT)
-+#define IS_TOUCHZOOM(ev) ((ev)->ev_class == EVENT_TOUCH && ((ev)->ev_code == TOUCH_ZOOM_IN || (ev)->ev_code == TOUCH_ZOOM_OUT))
-+
- // This macro is to determine if the event should be also handled by children of containers.
- #define DOES_WINDOW_CHILDREN_NEED(ev) ((ev)->ev_class == INFOWIN || (ev)->ev_class == WINDOW_RESIZE || (ev)->ev_class == WINDOW_MAKE_MIN_SIZE ) // 11-Mar-03 (Mathew Hounsell) Added
- 
-@@ -142,6 +161,9 @@
-  * ev_class = EVENT_DRAG:      cx/cy is last click place, mx/my is to,
-  *                             code = mouse button
-  * ev_class = EVENT_REPEAT:    code = button pressed
-+ * ev_class = EVENT_TOUCH:     code = type of touch/gesture event
-+ *                             button_state = magnitude of event
-+ *                             cx/cy/mx/my/button_state all depend on code
-  *
-  * @author Hj. Malthaner, Niels Roest
-  */
-@@ -165,6 +187,8 @@
- 	 * @author hsiegeln
- 	 */
- 	unsigned int ev_key_mod;
-+	
-+	int magnitude;
- 
- 	event_t(unsigned int event_class = EVENT_NONE) : ev_class(event_class),
- 		ev_code(0),
-Index: siminteraction.cc
-===================================================================
---- siminteraction.cc	(revision 7138)
-+++ siminteraction.cc	(working copy)
-@@ -50,7 +50,36 @@
- 	}
- }
- 
-+void interaction_t::move_view_touch( const event_t &ev )
-+{
-+	koord new_ij = viewport->get_world_position();
-+	
-+	sint16 new_xoff = viewport->get_x_off();
-+	sint16 new_yoff = viewport->get_y_off();
- 
-+	switch (ev.ev_code) {
-+		case TOUCH_SCROLL_UP:
-+			new_yoff += ev.magnitude * env_t::scroll_multi;
-+			break;
-+		case TOUCH_SCROLL_DOWN:
-+			new_yoff -= ev.magnitude * env_t::scroll_multi;
-+			break;
-+		case TOUCH_SCROLL_LEFT:
-+			new_xoff += ev.magnitude * env_t::scroll_multi;
-+			break;
-+		case TOUCH_SCROLL_RIGHT:
-+			new_xoff -= ev.magnitude * env_t::scroll_multi;
-+			break;
-+		default:
-+			break;
-+	}
-+
-+	// this sets the new position and mark screen dirty
-+	// => with next refresh we will be at a new location
-+	viewport->change_world_position( new_ij, new_xoff, new_yoff );
-+}
-+
-+
- void interaction_t::move_cursor( const event_t &ev )
- {
- 	zeiger_t *zeiger = world->get_zeiger();
-@@ -345,6 +374,10 @@
- 		// unset following
- 		world->get_viewport()->set_follow_convoi( convoihandle_t() );
- 		move_view(ev);
-+	} else if (ev.ev_class == EVENT_TOUCH) {
-+		// unset following
-+		world->get_viewport()->set_follow_convoi( convoihandle_t() );
-+		move_view_touch(ev);
- 	}
- 	else if(  (left_drag  ||  world->get_werkzeug(world->get_active_player_nr())->get_id() == (WKZ_ABFRAGE | GENERAL_TOOL))  &&  IS_LEFTDRAG(&ev)  ) {
- 		/* ok, we have the query tool selected, and we have a left drag or left release event with an actual different
-Index: siminteraction.h
-===================================================================
---- siminteraction.h	(revision 7138)
-+++ siminteraction.h	(working copy)
-@@ -35,6 +35,11 @@
- 	 * Processes a mouse event that's moving the camera.
- 	 */
- 	void move_view(const event_t &ev);
-+	
-+	/**
-+	 * Processes a touch event that's moving the camera.
-+	 */
-+	void move_view_touch(const event_t &ev);
- 
- 	/**
- 	 * Processes a cursor movement event, related to the tool pointer in-map.
 Index: simmain.cc
 ===================================================================
---- simmain.cc	(revision 7138)
+--- simmain.cc	(revision 7175)
 +++ simmain.cc	(working copy)
 @@ -479,7 +479,7 @@
  	else {
@@ -370,7 +39,7 @@ Index: simmain.cc
  	printf("Use work dir %s\n", env_t::program_dir);
 Index: simsys.cc
 ===================================================================
---- simsys.cc	(revision 7138)
+--- simsys.cc	(revision 7175)
 +++ simsys.cc	(working copy)
 @@ -89,12 +89,19 @@
  	RegQueryValueExA(hHomeDir, "Personal", 0, 0, (BYTE*)buffer, &len);
@@ -394,19 +63,9 @@ Index: simsys.cc
  #ifdef _WIN32
 Index: simsys.h
 ===================================================================
---- simsys.h	(revision 7138)
+--- simsys.h	(revision 7175)
 +++ simsys.h	(working copy)
-@@ -29,6 +29,9 @@
- #define SIM_MOUSE_BUTTONS   1
- #define SIM_KEYBOARD        2
- #define SIM_MOUSE_MOVE      3
-+#define SIM_TOUCH           4
-+#define SIM_TOUCH_BEGIN     5
-+#define SIM_TOUCH_END       6
- #define SIM_SYSTEM          254
- #define SIM_IGNORE_EVENT    255
- 
-@@ -43,6 +46,30 @@
+@@ -43,6 +43,10 @@
  #define SIM_MOUSE_WHEELUP           8 //2003-11-04 hsiegeln added
  #define SIM_MOUSE_WHEELDOWN         9 //2003-11-04 hsiegeln added
  
@@ -414,46 +73,11 @@ Index: simsys.h
 +#define SIM_SYSTEM_RESIZE           2
 +#define SIM_SYSTEM_UPDATE           3
 +
-+/**
-+ * Touch/Gesture event codes
-+ * @author Timothy Baldock <tb+simutrans@entropy.me.uk>
-+ * @date 03/07/2012
-+ */
-+
-+// Two types of touch events, scroll and drag
-+// Scroll is intended for scrolling dialogs or moving the game map around
-+// Drag is intended for tool use
-+#define SIM_TOUCH_SCROLL_UP         101
-+#define SIM_TOUCH_SCROLL_DOWN		102
-+#define SIM_TOUCH_SCROLL_LEFT       103
-+#define SIM_TOUCH_SCROLL_RIGHT      104
-+
-+#define SIM_TOUCH_ZOOM_IN           110
-+#define SIM_TOUCH_ZOOM_OUT          111
-+#define SIM_TOUCH_ROTATE_LEFT       120
-+#define SIM_TOUCH_ROTATE_RIGHT      121
-+
-+
  /* Globale Variablen zur Messagebearbeitung */
  
  struct sys_event
-@@ -53,6 +80,7 @@
- 	int my;
- 	int mb;
- 	unsigned int key_mod; /* key mod, like ALT, STRG, SHIFT */
-+	int magnitude;
- };
- 
- extern struct sys_event sys_event;
-@@ -84,9 +112,26 @@
- 
- void dr_mkdir(char const* path);
- 
--/* query home directory */
-+/**
-+ * Get platform-specific directory
-+ * @return Path to home directory
-+ */
+@@ -87,6 +91,12 @@
+ /* query home directory */
  char const* dr_query_homedir();
  
 +/**
@@ -462,20 +86,12 @@ Index: simsys.h
 + */
 +char const* dr_query_logdir();
 +
-+/**
-+ * Get platform-specific pakset directory location
-+ * @return Path to pakset storage directory
-+ */
-+char const* dr_query_objdir();
-+
-+
-+unsigned short* dr_textur_init(void);
  unsigned short* dr_textur_init();
  
  
 Index: simutrans
 ===================================================================
---- simutrans	(revision 7138)
+--- simutrans	(revision 7175)
 +++ simutrans	(working copy)
 
 Property changes on: simutrans
@@ -485,7 +101,7 @@ Added: svn:ignore
 +
 Index: simutrans/text
 ===================================================================
---- simutrans/text	(revision 7138)
+--- simutrans/text	(revision 7175)
 +++ simutrans/text	(working copy)
 
 Property changes on: simutrans/text

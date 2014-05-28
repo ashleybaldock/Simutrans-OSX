@@ -39,7 +39,7 @@ char const* dr_query_homedir()
 {
 	static char buffer[PATH_MAX];
 	
-	sprintf(buffer, "%s/Library/Application Support", [NSHomeDirectory() UTF8String]);
+	sprintf(buffer, "%s/Library/Application Support/Simutrans", [NSHomeDirectory() UTF8String]);
 	
 	NSLog(@"%s", buffer);
 	
@@ -65,21 +65,6 @@ char const* dr_query_logdir()
 	static char buffer[PATH_MAX];
 	
 	sprintf(buffer, "%s/Library/Logs", [NSHomeDirectory() UTF8String]);
-	
-	return buffer;
-}
-
-/*
- * Query for user pakset directory
- * This is a location users can place their own paksets
- * and use the in-game pakset selection dialog to choose one
- */
-char const* dr_query_objdir()
-{
-	static char buffer[PATH_MAX];
-	
-	// TODO - this should be a user-accesible location (needs sandbox privs to read)
-	sprintf(buffer, "%s/Library/Application Support/paksets/", [NSHomeDirectory() UTF8String]);
 	
 	return buffer;
 }
