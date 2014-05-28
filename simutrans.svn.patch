@@ -37,30 +37,6 @@ Index: simmain.cc
  		chdir( env_t::program_dir );
  	}
  	printf("Use work dir %s\n", env_t::program_dir);
-Index: simsys.cc
-===================================================================
---- simsys.cc	(revision 7175)
-+++ simsys.cc	(working copy)
-@@ -89,12 +89,19 @@
- 	RegQueryValueExA(hHomeDir, "Personal", 0, 0, (BYTE*)buffer, &len);
- 	strcat(buffer,"\\Simutrans");
- #elif defined __APPLE__
-+#	ifdef OSX_SANDBOX
-+	sprintf(buffer, "%s/Library/Containers/org.simutrans.simutrans/Data/Library/Application Support", getenv("HOME"));
-+#	else
- 	sprintf(buffer, "%s/Library/Simutrans", getenv("HOME"));
-+#	endif
- #else
- 	sprintf(buffer, "%s/simutrans", getenv("HOME"));
- #endif
- 
-+	// This will be created for us if necessary
-+#ifndef OSX_SANDBOX
- 	dr_mkdir(buffer);
-+#endif
- 
- 	// create other subdirectories
- #ifdef _WIN32
 Index: simsys.h
 ===================================================================
 --- simsys.h	(revision 7175)
