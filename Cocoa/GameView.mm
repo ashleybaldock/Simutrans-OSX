@@ -216,6 +216,23 @@ STQueue* eventqueue = [[STQueue alloc] init];
 	}
 }
 
+- (void)screenshot
+{
+	// Find first unused screenshot filename
+	NSString* screenshotFolder = [NSString stringWithFormat:@"%@/Library/Application Support/Simutrans/screenshot", NSHomeDirectory()];
+
+	int number = 0;
+	NSString* screenshotPath;
+	do {
+		screenshotPath = [NSString stringWithFormat:@"%@/simscr%03d.png", screenshotFolder, number];
+	} while ([[NSFileManager defaultManager] fileExistsAtPath:screenshotPath]);
+	
+	NSBitmapImageRep* rep = [self bitmapImageRepForCachingDisplayInRect:[self bounds]];
+	[self cacheDisplayInRect:[self bounds] toBitmapImageRep:rep];
+	NSData *data = [rep representationUsingType: NSPNGFileType properties: nil];
+	[data writeToFile: screenshotPath atomically: NO];
+}
+
 - (void)drawRect:(NSRect) __unused dirtyRect
 {
 	// Create image from raw data wrapped in provider
@@ -255,6 +272,23 @@ STQueue* eventqueue = [[STQueue alloc] init];
 		CGDataProviderRelease(nil);
 		[screenbuf_lock unlockWithCondition:0];
 	}
+}
+
+
+- (IBAction)takeScreenshot:(id) __unused sender
+{
+	[self screenshot];
+}
+
+- (IBAction)openBundle:(id) __unused sender
+{
+	[[NSWorkspace sharedWorkspace] openFile:[NSString stringWithFormat:@"%@/Contents/MacOS/", [[NSBundle mainBundle] bundlePath]]];
+
+}
+
+- (IBAction)openUserFolder:(id) __unused sender
+{
+	[[NSWorkspace sharedWorkspace] openFile:[NSString stringWithFormat:@"%@/Library/Application Support/Simutrans", NSHomeDirectory()]];
 }
 
 - (BOOL)isOpaque

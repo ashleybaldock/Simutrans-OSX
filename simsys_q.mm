@@ -151,9 +151,9 @@ resolution dr_query_screen_resolution()
 /*
  * Take a screenshot if possible, return status code for operation
  */
-int dr_screenshot(const char *filename, int x, int y, int w, int h)
+int dr_screenshot(const char __unused *filename, int __unused x, int __unused y, int __unused w, int __unused h)
 {
-    // TODO
+	[theGameView screenshot];
 	return 0;
 }
 
@@ -213,7 +213,6 @@ static void internal_GetEvents(bool wait)
     {
         case NSLeftMouseDown:
         {
-            NSLog(@"Left mouse down event made it to internal_GetEvents");
             sys_event.type    = SIM_MOUSE_BUTTONS;
 			sys_event.key_mod = convert_modifier_keys(evt);
             last_mouse_pos = [evt locationInWindow];
@@ -226,7 +225,6 @@ static void internal_GetEvents(bool wait)
         }
         case NSRightMouseDown:
         {
-            NSLog(@"Right mouse down event made it to internal_GetEvents");
             sys_event.type    = SIM_MOUSE_BUTTONS;
 			sys_event.key_mod = convert_modifier_keys(evt);
             last_mouse_pos = [evt locationInWindow];
@@ -247,7 +245,6 @@ static void internal_GetEvents(bool wait)
             
         case NSLeftMouseUp:
         {
-            NSLog(@"Left mouse up event made it to internal_GetEvents");
 			sys_event.type    = SIM_MOUSE_BUTTONS;
 			sys_event.key_mod = convert_modifier_keys(evt);
             last_mouse_pos = [evt locationInWindow];
@@ -260,7 +257,6 @@ static void internal_GetEvents(bool wait)
         }
         case NSRightMouseUp:
         {
-            NSLog(@"Right mouse up event made it to internal_GetEvents");
 			sys_event.type    = SIM_MOUSE_BUTTONS;
 			sys_event.key_mod = convert_modifier_keys(evt);
             last_mouse_pos = [evt locationInWindow];
@@ -341,7 +337,6 @@ static void internal_GetEvents(bool wait)
             }
             else if ( [codechars length] == 1 ) {
                 keyChar = [codechars characterAtIndex:0];
-                NSLog(@"NSKeyDown event, keyChar: %i", keyChar);
                 switch (keyChar) {
                     case NSDeleteCharacter:         code = SIM_KEY_BACKSPACE;   break;
                     case NSTabCharacter:            code = SIM_KEY_TAB;         break;
@@ -385,19 +380,6 @@ static void internal_GetEvents(bool wait)
             sys_event.code    = code;
             sys_event.key_mod = convert_modifier_keys(evt);
             break;
-
-			//bool   const  numlock = SDL_GetModState() & KMOD_NUM;
-				/*case SDLK_KP0:      code = numlock ? '0' : 0;             break;
-				case SDLK_KP1:      code = numlock ? '1' : SIM_KEY_END;   break;
-				case SDLK_KP2:      code = numlock ? '2' : SIM_KEY_DOWN;  break;
-				case SDLK_KP3:      code = numlock ? '3' : '<';           break;
-				case SDLK_KP4:      code = numlock ? '4' : SIM_KEY_LEFT;  break;
-				case SDLK_KP5:      code = numlock ? '5' : 0;             break;
-				case SDLK_KP6:      code = numlock ? '6' : SIM_KEY_RIGHT; break;
-				case SDLK_KP7:      code = numlock ? '7' : SIM_KEY_HOME;  break;
-				case SDLK_KP8:      code = numlock ? '8' : SIM_KEY_UP;    break;
-				case SDLK_KP9:      code = numlock ? '9' : '>';           break;*/
-				//case SDLK_PAUSE:    code = 16;                            break;  TODO
         }
 
         case NSKeyUp:
@@ -430,10 +412,10 @@ static void internal_GetEvents(bool wait)
             }
             break;
         }
+
         case NSScrollWheel:
         {
-            if ([evt deltaY] > 0.0) {
-				NSLog(@"Scrollwheel (down) event made it to internal_GetEvents");
+            if ([evt deltaY] < 0.0) {
 				sys_event.type    = SIM_MOUSE_BUTTONS;
 				sys_event.key_mod = convert_modifier_keys(evt);
 				NSPoint event_location = [evt locationInWindow];
@@ -442,8 +424,7 @@ static void internal_GetEvents(bool wait)
 				sys_event.my      = height - local_point.y;
 				sys_event.mb      = 0;
 				sys_event.code    = SIM_MOUSE_WHEELDOWN;
-			} else if ([evt deltaY] < 0.0) {
-				NSLog(@"Scrollwheel (up) event made it to internal_GetEvents");
+			} else if ([evt deltaY] > 0.0) {
 				sys_event.type    = SIM_MOUSE_BUTTONS;
 				sys_event.key_mod = convert_modifier_keys(evt);
 				NSPoint event_location = [evt locationInWindow];

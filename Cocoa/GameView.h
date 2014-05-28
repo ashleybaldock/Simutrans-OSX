@@ -13,7 +13,12 @@
     int game_quit;
 }
 
+- (IBAction)openUserFolder:(id)sender;
+- (IBAction)openBundle:(id)sender;
+- (IBAction)takeScreenshot:(id)sender;
+
 - (void)trigger_quit;
 - (void)game_trigger_quit;
+- (void)screenshot;
 
 @end
