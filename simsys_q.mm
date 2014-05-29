@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012 Timothy Baldock <tb@entropy.me.uk>
+ * Copyright (c) 2011-2014 Timothy Baldock <tb@entropy.me.uk>
  *
  * Created 13/12/2011
  */
@@ -55,7 +55,6 @@ extern STQueue* eventqueue;
  */
 bool dr_os_init(const int*)
 {
-    NSLog(@"dr_os_init");
 	// prepare for next event
 	sys_event.type = SIM_NOEVENT;
 	sys_event.code = 0;
@@ -79,8 +78,6 @@ int dr_os_open(int, int, int)
  */
 void dr_os_close(void)
 {
-    // TODO
-    // Ask the application to close since the game thread has shut down
     [theGameView game_trigger_quit];
 }
 

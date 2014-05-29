@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012 Timothy Baldock <tb@entropy.me.uk>
+ * Copyright (c) 2011-2014 Timothy Baldock <tb@entropy.me.uk>
  *
  * Created 25/03/2012
  */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012 Timothy Baldock <tb@entropy.me.uk>
+ * Copyright (c) 2011-2014 Timothy Baldock <tb@entropy.me.uk>
  *
  * Created 13/12/2011
  */
@@ -99,18 +99,20 @@ STQueue* eventqueue = [[STQueue alloc] init];
 }
 
 // Modifier key flags have changed (e.g. ctrl pressed)
-- (void)flagsChanged:(NSEvent *)theEvent {
+- (void)flagsChanged:(NSEvent *)theEvent
+{
     [eventqueue enqueue:[theEvent copy]];
 }
 
 
-- (void)scrollWheel:(NSEvent *)theEvent {
+- (void)scrollWheel:(NSEvent *)theEvent
+{
 	[eventqueue enqueue:[theEvent copy]];
 }
 
-- (void)viewDidMoveToWindow {
+- (void)viewDidMoveToWindow
+{
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowResized:) name:NSWindowDidResizeNotification object:[self window]];
-    
 }
 
 - (void)windowResized:(NSNotification *) __unused notification
@@ -129,7 +131,6 @@ STQueue* eventqueue = [[STQueue alloc] init];
     NSEvent *theEvent = [NSEvent otherEventWithType:NSApplicationDefined location:NSZeroPoint modifierFlags:0 timestamp:0 windowNumber:0 context:0 subtype:1 data1:self.frame.size.width data2:self.frame.size.height];
         
     [eventqueue enqueue:[theEvent copy]];
-
 }
 
 /*
@@ -198,8 +199,10 @@ STQueue* eventqueue = [[STQueue alloc] init];
 	
 	[argvs addObject:[NSString stringWithString:[[[NSProcessInfo processInfo] arguments] objectAtIndex:0]]];
 
+#ifdef DEBUG
 	[argvs addObject:@"-debug"];
 	[argvs addObject:@"3"];
+#endif
 
 	int g_argc = [argvs count];
 	char* g_argv[32];
