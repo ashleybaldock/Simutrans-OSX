@@ -225,6 +225,7 @@ STQueue* eventqueue = [[STQueue alloc] init];
 	NSString* screenshotPath;
 	do {
 		screenshotPath = [NSString stringWithFormat:@"%@/simscr%03d.png", screenshotFolder, number];
+		number++;
 	} while ([[NSFileManager defaultManager] fileExistsAtPath:screenshotPath]);
 	
 	NSBitmapImageRep* rep = [self bitmapImageRepForCachingDisplayInRect:[self bounds]];
