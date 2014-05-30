@@ -5,9 +5,12 @@
  */
 
 #import <Cocoa/Cocoa.h>
+#import "GameView.h"
 
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 
+@property (assign) IBOutlet NSApplication *app;
 @property (assign) IBOutlet NSWindow *window;
+@property (assign) IBOutlet GameView *gameView;
 
 @end

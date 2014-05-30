@@ -136,37 +136,31 @@ STQueue* eventqueue = [[STQueue alloc] init];
 /*
  * Handle synchronisation between the game thread quitting and the app quitting
  */
-- (void)game_trigger_quit
+- (void)gameThreadRequestQuit
 {
-    NSLog(@"Game quit event triggered");
-    // Send quit event to the game thread
-    // When game quits, it will send back a message indicating this (via dr_os_quit())
-    if (game_quit == 0) {
-        game_quit = 1;
-		// Don't terminate, just close parent window
-        //[NSApp terminate:nil];
-		[[self window] close];
-    } else {
-        game_quit = 1;
-        NSLog(@"Game thread has quit in response to request from application, permitting termination");
-		[[self window] close];
+    NSLog(@"Game thread has requested quit");
+	GameThreadHasQuit = YES;
+	if (UIHasAskedGameToQuit)
+	{
+		NSLog(@"Game thread has quit in response to request from application, permitting termination");
         [NSApp replyToApplicationShouldTerminate:YES];
-    }
+	}
+	[[self window] close];
 }
 
 /*
  * Asks the game thread to quit
  * It will respond via dr_os_quit()
  */
-- (void)trigger_quit
+- (void)sendQuitEventToGameThread
 {
-    NSLog(@"Quit event triggered");
+    NSLog(@"Sending quit event to game thread");
+	UIHasAskedGameToQuit = YES;
     // Send quit event to the game thread
     // When game quits, it will send back a message (via dr_os_quit())
     NSEvent *theEvent = [NSEvent otherEventWithType:NSApplicationDefined location:NSZeroPoint modifierFlags:0 timestamp:0 windowNumber:0 context:0 subtype:2 data1:0 data2:0];
         
     [eventqueue enqueueAtFront:[theEvent copy]];
-
 }
 
 - (void)awakeFromNib
@@ -181,7 +175,8 @@ STQueue* eventqueue = [[STQueue alloc] init];
 	
     theGameView = self;
     screenbuf_lock = [[NSConditionLock alloc] initWithCondition:0];
-    game_quit = 0;
+	UIHasAskedGameToQuit = NO;
+	GameThreadHasQuit = NO;
 
 	NSLog(@"representedObject: content - attributeKeys: %@", [[representedObject content] attributeKeys]);
 	NSLog(@"representedObject: content - exposedBindings: %@", [[representedObject content] exposedBindings]);
@@ -203,6 +198,9 @@ STQueue* eventqueue = [[STQueue alloc] init];
 	[argvs addObject:@"-debug"];
 	[argvs addObject:@"3"];
 #endif
+
+	[argvs addObject:@"-screensize"];
+	[argvs addObject:[NSString stringWithFormat:@"%dx%d", (int)self.frame.size.width, (int)self.frame.size.height]];
 
 	int g_argc = [argvs count];
 	char* g_argv[32];

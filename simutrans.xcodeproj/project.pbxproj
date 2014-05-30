@@ -281,6 +281,7 @@
 		1C90FCFE1498249500C09F72 /* simworld.cc in Sources */ = {isa = PBXBuildFile; fileRef = 1C90FCDC1498249500C09F72 /* simworld.cc */; };
 		1C90FD001498249500C09F72 /* unicode.cc in Sources */ = {isa = PBXBuildFile; fileRef = 1C90FCDF1498249500C09F72 /* unicode.cc */; };
 		1C90FD031498250800C09F72 /* clipboard_internal.cc in Sources */ = {isa = PBXBuildFile; fileRef = 1C90FD011498250800C09F72 /* clipboard_internal.cc */; };
+		1CA66BCF1938897D0089780E /* WindowDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CA66BCE1938897D0089780E /* WindowDelegate.m */; };
 		1CB9C95716380AEF00F89241 /* sq_extensions.cc in Sources */ = {isa = PBXBuildFile; fileRef = 1CB9C92616380AEF00F89241 /* sq_extensions.cc */; };
 		1CB9C95816380AEF00F89241 /* sqstdaux.cc in Sources */ = {isa = PBXBuildFile; fileRef = 1CB9C92C16380AEF00F89241 /* sqstdaux.cc */; };
 		1CB9C95916380AEF00F89241 /* sqstdblob.cc in Sources */ = {isa = PBXBuildFile; fileRef = 1CB9C92D16380AEF00F89241 /* sqstdblob.cc */; };
@@ -980,6 +981,8 @@
 		1C90FCE01498249500C09F72 /* unicode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = unicode.h; sourceTree = "<group>"; };
 		1C90FD011498250800C09F72 /* clipboard_internal.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = clipboard_internal.cc; sourceTree = "<group>"; };
 		1C90FD021498250800C09F72 /* convoihandle_t.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = convoihandle_t.h; sourceTree = "<group>"; };
+		1CA66BCD1938897D0089780E /* WindowDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = WindowDelegate.h; path = Cocoa/WindowDelegate.h; sourceTree = "<group>"; };
+		1CA66BCE1938897D0089780E /* WindowDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = WindowDelegate.m; path = Cocoa/WindowDelegate.m; sourceTree = "<group>"; };
 		1CB9C92616380AEF00F89241 /* sq_extensions.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sq_extensions.cc; sourceTree = "<group>"; };
 		1CB9C92716380AEF00F89241 /* sq_extensions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sq_extensions.h; sourceTree = "<group>"; };
 		1CB9C92816380AEF00F89241 /* sqstdaux.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sqstdaux.h; sourceTree = "<group>"; };
@@ -1195,6 +1198,8 @@
 				1CF0FC191498193800347616 /* Supporting Files */,
 				1CF0FC241498193800347616 /* AppDelegate.h */,
 				1CF0FC251498193800347616 /* AppDelegate.m */,
+				1CA66BCD1938897D0089780E /* WindowDelegate.h */,
+				1CA66BCE1938897D0089780E /* WindowDelegate.m */,
 				1CF0FC46149819D800347616 /* GameView.h */,
 				1CF0FC47149819D800347616 /* GameView.mm */,
 				1CE2F2E715A3990900BB9FCC /* MainMenu.xib */,
@@ -2507,6 +2512,7 @@
 				1C49977518F98ACA00057640 /* environment.cc in Sources */,
 				1CB9C9EA16380BED00F89241 /* export_objs.cc in Sources */,
 				1CB9C9EB16380BED00F89241 /* script.cc in Sources */,
+				1CA66BCF1938897D0089780E /* WindowDelegate.m in Sources */,
 				1CB9C9F116380CC800F89241 /* scenario_info.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

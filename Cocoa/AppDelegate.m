@@ -10,6 +10,7 @@
 @implementation AppDelegate
 
 @synthesize window = _window;
+@synthesize gameView = _gameView;
 
 - (void)applicationDidFinishLaunching:(NSNotification *) __unused aNotification
 {
@@ -19,6 +20,19 @@
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *) __unused theApplication
 {
     return YES;
+}
+
+- (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *) __unused sender
+{
+	if (_gameView->GameThreadHasQuit)
+	{
+		return NSTerminateNow;
+	}
+	else
+	{
+		[_gameView sendQuitEventToGameThread];
+		return NSTerminateLater;
+	}
 }
 
 @end

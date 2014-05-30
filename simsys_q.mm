@@ -78,7 +78,7 @@ int dr_os_open(int, int, int)
  */
 void dr_os_close(void)
 {
-    [theGameView game_trigger_quit];
+    [theGameView gameThreadRequestQuit];
 }
 
 /*

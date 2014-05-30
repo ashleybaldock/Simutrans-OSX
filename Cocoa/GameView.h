@@ -10,15 +10,16 @@
 @public
 	IBOutlet NSObjectController* representedObject;
     NSConditionLock* screenbuf_lock;    // 0 = Normal, 1 = resizing
-    int game_quit;
+	BOOL UIHasAskedGameToQuit;
+	BOOL GameThreadHasQuit;
 }
 
 - (IBAction)openUserFolder:(id)sender;
 - (IBAction)openBundle:(id)sender;
 - (IBAction)takeScreenshot:(id)sender;
 
-- (void)trigger_quit;
-- (void)game_trigger_quit;
+- (void)sendQuitEventToGameThread;
+- (void)gameThreadRequestQuit;
 - (void)screenshot;
 
 @end
