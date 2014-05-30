@@ -172,14 +172,14 @@ STQueue* eventqueue = [[STQueue alloc] init];
 	
 	// Necessary to make this work on 10.8
 	[self setWantsLayer:NO];
-	
+		
 	SimutransUserDirectory = [NSString stringWithFormat:@"%@/Library/Simutrans", NSHomeDirectory()];
 
     theGameView = self;
     screenbuf_lock = [[NSConditionLock alloc] initWithCondition:0];
 	UIHasAskedGameToQuit = NO;
 	GameThreadHasQuit = NO;
-	
+		
     // Spawn main game thread
     [NSThread detachNewThreadSelector:@selector(GameThreadMainRoutine) toTarget:self withObject:nil];
 }
@@ -249,9 +249,7 @@ STQueue* eventqueue = [[STQueue alloc] init];
 		CGDataProviderRef screenbuf_provider = CGDataProviderCreateWithData(screenbuf, screenbuf, width*height*2, nil);
 		
 		CGColorSpaceRef space = CGColorSpaceCreateDeviceRGB();
-		
-
-		
+				
 		CGImageRef img = CGImageCreate(width,                      // width
 									   height,                     // height
 									   5,                          // bitsPerComponent
@@ -263,6 +261,13 @@ STQueue* eventqueue = [[STQueue alloc] init];
 									   NULL,                       // decode array
 									   NO,                         // shouldInterpolate
 									   kCGRenderingIntentDefault); // intent
+		
+		// If image width < view width or image height < view height then fill the background with black first
+		if (width < self.frame.size.width || height < self.frame.size.height)
+		{
+			CGContextSetRGBFillColor(myContext, 0.0, 0.0, 0.0, 1.0);
+			CGContextFillRect(myContext, CGRectMake(0, 0, self.frame.size.width, self.frame.size.height));
+		}
 		
 		CGContextDrawImage(myContext, CGRectMake(0, self.frame.size.height - height, width, height), img);
 		
