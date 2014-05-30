@@ -173,13 +173,12 @@ STQueue* eventqueue = [[STQueue alloc] init];
 	// Necessary to make this work on 10.8
 	[self setWantsLayer:NO];
 	
+	SimutransUserDirectory = [NSString stringWithFormat:@"%@/Library/Simutrans", NSHomeDirectory()];
+
     theGameView = self;
     screenbuf_lock = [[NSConditionLock alloc] initWithCondition:0];
 	UIHasAskedGameToQuit = NO;
 	GameThreadHasQuit = NO;
-
-	NSLog(@"representedObject: content - attributeKeys: %@", [[representedObject content] attributeKeys]);
-	NSLog(@"representedObject: content - exposedBindings: %@", [[representedObject content] exposedBindings]);
 	
     // Spawn main game thread
     [NSThread detachNewThreadSelector:@selector(GameThreadMainRoutine) toTarget:self withObject:nil];
@@ -220,7 +219,7 @@ STQueue* eventqueue = [[STQueue alloc] init];
 - (void)screenshot
 {
 	// Find first unused screenshot filename
-	NSString* screenshotFolder = [NSString stringWithFormat:@"%@/Library/Application Support/Simutrans/screenshot", NSHomeDirectory()];
+	NSString* screenshotFolder = [NSString stringWithFormat:@"%@/screenshot", SimutransUserDirectory];
 
 	int number = 0;
 	NSString* screenshotPath;
@@ -290,7 +289,7 @@ STQueue* eventqueue = [[STQueue alloc] init];
 
 - (IBAction)openUserFolder:(id) __unused sender
 {
-	[[NSWorkspace sharedWorkspace] openFile:[NSString stringWithFormat:@"%@/Library/Application Support/Simutrans", NSHomeDirectory()]];
+	[[NSWorkspace sharedWorkspace] openFile:SimutransUserDirectory];
 }
 
 - (BOOL)isOpaque

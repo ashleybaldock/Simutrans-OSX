@@ -12,6 +12,8 @@
     NSConditionLock* screenbuf_lock;    // 0 = Normal, 1 = resizing
 	BOOL UIHasAskedGameToQuit;
 	BOOL GameThreadHasQuit;
+	
+	NSString* SimutransUserDirectory;
 }
 
 - (IBAction)openUserFolder:(id)sender;

@@ -22,8 +22,11 @@
 #include <limits.h>
 #include <locale.h>
 
+#import "Cocoa/GameView.h"
+
 struct sys_event sys_event;
 
+extern GameView* theGameView;
 
 void dr_mkdir(char const* const path)
 {
@@ -42,7 +45,7 @@ char const* dr_query_homedir()
 	
 	// For sandbox support
 	// sprintf(buffer, "%s/Library/Containers/org.simutrans.simutrans/Data/Library/Application Support", getenv("HOME"));
-	sprintf(buffer, "%s/Library/Application Support/Simutrans", [NSHomeDirectory() UTF8String]);
+	sprintf(buffer, "%s", [theGameView->SimutransUserDirectory UTF8String]);
 	dr_mkdir(buffer);
 	
 	NSLog(@"%s", buffer);
