@@ -275,9 +275,7 @@ static void internal_GetEvents(bool wait)
             sys_event.type    = SIM_MOUSE_MOVE;
             sys_event.key_mod = convert_modifier_keys(evt);
             last_mouse_pos = [evt locationInWindow];
-			//NSLog(@"mouse moved newpos: (%f,%f)", last_mouse_pos.x, last_mouse_pos.y);
             NSPoint local_point = [theGameView convertPoint:last_mouse_pos fromView:nil];
-			//NSLog(@"local_point: (%f,%f)", local_point.x, local_point.y);
             sys_event.mx      = local_point.x;
 			sys_event.my      = height - local_point.y;
             sys_event.mb      = 0;
@@ -290,9 +288,10 @@ static void internal_GetEvents(bool wait)
             sys_event.type    = SIM_MOUSE_MOVE;
             sys_event.key_mod = convert_modifier_keys(evt);
             last_mouse_pos = [evt locationInWindow];
+			NSLog(@"mouse dragged (left) last_mouse_pos: (%f,%f), deltaX: %f, deltaY: %f", last_mouse_pos.x, last_mouse_pos.y, [evt deltaX], [evt deltaY]);
             NSPoint local_point = [theGameView convertPoint:last_mouse_pos fromView:nil];
-            sys_event.mx      = local_point.x;
-			sys_event.my      = height - local_point.y;
+            sys_event.mx      = local_point.x + [evt deltaX];
+			sys_event.my      = height - local_point.y + [evt deltaY];
             sys_event.mb      = MOUSE_LEFTBUTTON;
             sys_event.code    = SIM_MOUSE_MOVED;
             break;
@@ -303,9 +302,10 @@ static void internal_GetEvents(bool wait)
             sys_event.type    = SIM_MOUSE_MOVE;
             sys_event.key_mod = convert_modifier_keys(evt);
             last_mouse_pos = [evt locationInWindow];
+			NSLog(@"mouse dragged (right) last_mouse_pos: (%f,%f), deltaX: %f, deltaY: %f", last_mouse_pos.x, last_mouse_pos.y, [evt deltaX], [evt deltaY]);
             NSPoint local_point = [theGameView convertPoint:last_mouse_pos fromView:nil];
-            sys_event.mx      = local_point.x;
-			sys_event.my      = height - local_point.y;
+            sys_event.mx      = local_point.x + [evt deltaX];
+			sys_event.my      = height - local_point.y + [evt deltaY];
             sys_event.mb      = MOUSE_RIGHTBUTTON;
             sys_event.code    = SIM_MOUSE_MOVED;
             break;
@@ -466,22 +466,35 @@ void GetEventsNoWait(void)
 
 /* Mouse-pointer */
 
+
+
 /*
- * Not implemented for Mac as this breaks human interface guidelines
+ * Show or hide the cursor
  */
-void show_pointer(int)
+void show_pointer(int show)
 {
+	if (show) {
+		CGDisplayShowCursor(kCGNullDirectDisplay);
+	} else {
+		CGDisplayHideCursor(kCGNullDirectDisplay);
+	}
 }
 
 /*
- * Not implemented for Mac as this breaks human interface guidelines
+ * Move mouse pointer to specified loction - used for infinite dragging
  */
-void move_pointer(int, int)
+void move_pointer(int x, int y)
 {
+	NSPoint windowPoint = [theGameView convertPoint:NSMakePoint(x, height - y) toView:nil];
+	NSPoint screenPoint = [[theGameView window] convertBaseToScreen:windowPoint];
+	
+	NSScreen* mainScreen = [NSScreen screens][0];
+	screenPoint.y = mainScreen.frame.size.height - screenPoint.y;
+	CGWarpMouseCursorPosition(screenPoint);
 }
 
 /*
- * Not implemented for Mac as this breaks human interface guidelines
+ * Not implemented for Mac
  */
 void set_pointer(int)
 {
